@@ -119,7 +119,7 @@ int main(){
         break;
 
         default:
-        printf("Opcao invalida/n");
+        printf("Opcao invalida/n ");
 
        }
     }while (op!=0);
