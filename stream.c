@@ -13,18 +13,18 @@ typedef struct ArvProg{
 
 }ArvProg;
 
-typedef struct arvcat{
+typedef struct ListaCat{
     char tipo[100];
     char nomecat[100];
     struct ARVCat *ant;
     struct ARVcat *prox;
     struct ArvProg *prog; //ponteiro para a arvore de programas 
-}ARVcat;
+}ListaCat;
 //no da arvore de streams
 typedef struct nostream{
     char nome[100];
     char site [100];
-
+    struct ARVcat *cat;
     struct nostream *esq; // ponteiro para sub arvore esquerda 
     struct nostream *direita; // ponteiro para sub arvore direita 
 
@@ -81,8 +81,8 @@ nostream *inserirstream(nostream *raiz, char *nome, char *site){
         }
     }
 
-    ARVcat *criarcategoria(char *tipo, char *nomecategoria){
-    ARVcat *novo = (ARVcat *) malloc (sizeof(ARVcat));
+    ListaCat *criarcategoria(char *tipo, char *nomecategoria){
+    ListaCat *novo = (ListaCat *) malloc (sizeof(ListaCat));
 
     if(novo == NULL){
         printf("erro ao alocar ");
@@ -98,12 +98,18 @@ nostream *inserirstream(nostream *raiz, char *nome, char *site){
     return novo;
 }
 
-ARVcat *adicionarcategoria(ARVcat *lista, char *tipocat, char *nomecategoria){
+ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria){
     if(lista == NULL){
         criarcategoria(tipocat, nomecategoria);
     }
 
-    ARVcat *novo = (ARVcat *) malloc(sizeof(ARVcat));
+    ListaCat *novo = (ListaCat *) malloc(sizeof(ListaCat));
+    strcpy(novo->tipo, tipocat);
+    strcpy(novo->nomecat,nomecategoria);
+
+    while(lista != NULL){
+        lista = lista->prox;
+    }
 }
 
 
