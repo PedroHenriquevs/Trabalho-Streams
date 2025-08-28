@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+//no da arvore de programas
 typedef struct ArvProg{
     char nomeProg[100];
     char periodo[100];
@@ -19,12 +20,11 @@ typedef struct arvcat{
     struct ARVcat *prox;
     struct ArvProg *prog; //ponteiro para a arvore de programas 
 }ARVcat;
-
 //no da arvore de streams
 typedef struct nostream{
     char nome[100];
     char site [100];
-    struct ListCat *categoria; //ponteiro para a lista de categorias 
+
     struct nostream *esq; // ponteiro para sub arvore esquerda 
     struct nostream *direita; // ponteiro para sub arvore direita 
 
@@ -70,18 +70,18 @@ nostream *inserirstream(nostream *raiz, char *nome, char *site){
 
     }
 
-void mostrarstream(nostream*raiz){
-    if(raiz !=NULL){
-        mostrarstream(raiz->esq);
-        printf("\nNome: %s", raiz-> nome);
-        printf("\nSite: %s", raiz->site);
+    void mostrarstream(nostream*raiz){
+        if(raiz !=NULL){
+            mostrarstream(raiz->esq);
+            printf("\nNome: %s", raiz-> nome);
+            printf("\nSite: %s", raiz->site);
 
-        mostrarstream(raiz->direita);
+            mostrarstream(raiz->direita);
            
+        }
     }
-}
 
-ARVcat *criarcategoria(char *tipo, char *nomecategoria){
+    ARVcat *criarcategoria(char *tipo, char *nomecategoria){
     ARVcat *novo = (ARVcat *) malloc (sizeof(ARVcat));
 
     if(novo == NULL){
@@ -105,6 +105,9 @@ ARVcat *adicionarcategoria(ARVcat *lista, char *tipocat, char *nomecategoria){
 
     ARVcat *novo = (ARVcat *) malloc(sizeof(ARVcat));
 }
+
+
+
 
 int main(){
    nostream * raizdastream = NULL; // raiz começando vazia 
@@ -142,13 +145,10 @@ int main(){
         break;
 
         default:
-        printf("Opcao invalida/n ");
+        printf("Opcao invalida/n");
 
        }
     }while (op!=0);
    
     return 0;
 }
-
-
-
