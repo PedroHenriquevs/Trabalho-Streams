@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+//no da arvore de programas
 typedef struct ArvProg{
     char nomeProg[100];
     char periodo[100];
@@ -12,18 +13,18 @@ typedef struct ArvProg{
 
 }ArvProg;
 
-typedef struct ListCat{
+typedef struct arvcat{
     char tipo[100];
     char nomecat[100];
-    struct ListCat *prox;
+    struct ARVCat *ant;
+    struct ARVcat *prox;
     struct ArvProg *prog; //ponteiro para a arvore de programas 
-}ListCat;
-
+}ARVcat;
 //no da arvore de streams
 typedef struct nostream{
     char nome[100];
     char site [100];
-    struct ListCat *categoria; //ponteiro para a lista de categorias 
+
     struct nostream *esq; // ponteiro para sub arvore esquerda 
     struct nostream *direita; // ponteiro para sub arvore direita 
 
@@ -79,6 +80,31 @@ nostream *inserirstream(nostream *raiz, char *nome, char *site){
            
         }
     }
+
+    ARVcat *criarcategoria(char *tipo, char *nomecategoria){
+    ARVcat *novo = (ARVcat *) malloc (sizeof(ARVcat));
+
+    if(novo == NULL){
+        printf("erro ao alocar ");
+        exit(1);
+    }
+
+    strcpy(novo->tipo, tipo);
+    strcpy(novo->nomecat, nomecategoria);
+
+    novo->prox = NULL;
+    novo->ant = NULL;
+
+    return novo;
+}
+
+ARVcat *adicionarcategoria(ARVcat *lista, char *tipocat, char *nomecategoria){
+    if(lista == NULL){
+        criarcategoria(tipocat, nomecategoria);
+    }
+
+    ARVcat *novo = (ARVcat *) malloc(sizeof(ARVcat));
+}
 
 
 
