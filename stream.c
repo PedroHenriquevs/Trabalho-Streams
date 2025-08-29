@@ -125,7 +125,19 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
     }
 }
 
+int BuscaStream(nostream *arvstream, char *nome){
+    if(arvstream != NULL){
+        if(strcmp(nome, arvstream->nome) < 0){
+            BuscaStream(arvstream->esq, nome);
+        }else if(strcmp(nome, arvstream->nome) > 0){
+            BuscaStream(arvstream->direita, nome);
+        }else{
+            return 0;
+        }
+    }
 
+    return 1;
+}
 
 
 int main(){
@@ -162,6 +174,9 @@ int main(){
         mostrarstream(raizdastream);
         }
         break;
+        case 3: 
+            printf("Adicionar Categoria");
+            int achou
 
         default:
         printf("Opcao invalida/n");
