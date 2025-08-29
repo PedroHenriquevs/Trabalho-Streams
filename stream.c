@@ -44,7 +44,9 @@ nostream *criarstream(char *nome, char *site){
     strcpy( novo -> site, site);
 
     novo-> esq= NULL;
-    novo ->direita = NULL;
+    novo -> direita = NULL;
+    novo->cat = criarcategoria();
+
     return novo;
 
 }
@@ -68,47 +70,58 @@ nostream *inserirstream(nostream *raiz, char *nome, char *site){
     return raiz;
 
 
-    }
+}
 
-    void mostrarstream(nostream*raiz){
-        if(raiz !=NULL){
-            mostrarstream(raiz->esq);
-            printf("\nNome: %s", raiz-> nome);
-            printf("\nSite: %s", raiz->site);
+void mostrarstream(nostream*raiz){
+    if(raiz !=NULL){
+        mostrarstream(raiz->esq);
+        printf("\nNome: %s", raiz-> nome);
+        printf("\nSite: %s", raiz->site);
 
-            mostrarstream(raiz->direita);
+        mostrarstream(raiz->direita);
            
-        }
     }
+}
 
-    ListaCat *criarcategoria(char *tipo, char *nomecategoria){
-    ListaCat *novo = (ListaCat *) malloc (sizeof(ListaCat));
 
-    if(novo == NULL){
-        printf("erro ao alocar ");
-        exit(1);
-    }
+ListaCat *criarcategoria(){
+    return NULL;
 
-    strcpy(novo->tipo, tipo);
-    strcpy(novo->nomecat, nomecategoria);
-
-    novo->prox = NULL;
-    novo->ant = NULL;
-
-    return novo;
 }
 
 ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria){
-    if(lista == NULL){
-        criarcategoria(tipocat, nomecategoria);
-    }
-
     ListaCat *novo = (ListaCat *) malloc(sizeof(ListaCat));
     strcpy(novo->tipo, tipocat);
-    strcpy(novo->nomecat,nomecategoria);
+    strcpy(novo->nomecat, nomecategoria);
+    
+    if(lista == NULL){
+        novo->prox = novo;
+        novo->ant = novo;
 
-    while(lista != NULL){
-        lista = lista->prox;
+        return novo;
+    }
+    
+    ListaCat *atual = lista;
+
+    do{
+        if(strcpm(novo->nomecat, atual->nomecat) < 0){
+            break;
+        }
+        atual = atual->prox;
+
+    }while(atual!= lista);
+
+    ListaCat *anterior = atual->ant;
+
+    novo->prox = atual;
+    novo-> ant =anterior;
+    anterior->prox = novo;
+    atual->ant= novo;
+
+    if(strcmp(novo->nomecat, lista->nomecat)< 0){
+        return novo;
+    }else{
+        return lista;
     }
 }
 
