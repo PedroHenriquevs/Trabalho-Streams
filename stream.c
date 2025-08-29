@@ -125,18 +125,18 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
     }
 }
 
-int BuscaStream(nostream *arvstream, char *nome){
+nostream *BuscaStream(nostream *arvstream, char *nome){
     if(arvstream != NULL){
         if(strcmp(nome, arvstream->nome) < 0){
-            BuscaStream(arvstream->esq, nome);
+            return BuscaStream(arvstream->esq, nome);
         }else if(strcmp(nome, arvstream->nome) > 0){
-            BuscaStream(arvstream->direita, nome);
+            return BuscaStream(arvstream->direita, nome);
         }else{
-            return 0;
+            return arvstream;
         }
     }
 
-    return 1;
+    return NULL;
 }
 
 
@@ -176,7 +176,21 @@ int main(){
         break;
         case 3: 
             printf("Adicionar Categoria");
-            int achou
+            printf("Adicionar a qual stream? Digite o nome: \n");
+            char nomestream[100];
+            scanf('%s', nomestream);
+            nostream *achou = BuscaStream(raizdastream, &nomestream);
+
+            if(achou == NULL){
+                printf("Stream não cadastrada!\n");
+            }else{
+                char tipocat[100];
+                char nomecat[100];
+                printf("Tipo da categoria: \n");
+                scanf("%s", tipocat);
+                printf("Nome Catego")
+                adicionarcategoria(raizdastream)
+            }
 
         default:
         printf("Opcao invalida/n");
