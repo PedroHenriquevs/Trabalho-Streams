@@ -81,8 +81,10 @@ nostream *inserirstream(nostream *raiz, char *nome, char *site){
 void mostrarstream(nostream*raiz){
     if(raiz !=NULL){
         mostrarstream(raiz->esq);
+        printf("---------------------");
         printf("\nNome: %s", raiz-> nome);
-        printf("\nSite: %s", raiz->site);
+        printf("\nSite: %s\n", raiz->site);
+        printf("-----------------------\n");
 
         mostrarstream(raiz->direita);
            
@@ -144,6 +146,37 @@ nostream *BuscaStream(nostream *arvstream, char *nome){
     return NULL;
 }
 
+void mostrarcategoriaStream(nostream *stream, char *nomestream){
+    
+    ListaCat *lista = stream->cat;
+    if (lista == NULL) {
+        printf("\nO stream *%s* não possui categorias cadastradas.\n", nomestream);
+        return;
+    }
+
+    int cmp = strcmp(nomestream, stream->nome);
+
+    if(cmp < 0){
+        return mostrarcategoriaStream(stream->esq, nomestream);
+    }else if(cmp > 0){
+        return mostrarcategoriaStream(stream->direita, nomestream);
+    }else{
+
+        ListaCat *atual = lista;
+        printf("\nLISTA DE CATEGORIAS DO STREAM *%s*\n", nomestream);
+        do{
+            printf("-----------------------\n");
+            printf("Tipo: %s\n", atual->tipo);
+            printf("Nome categoria: %s\n", atual->nomecat);
+            printf("--------------------\n");
+
+            atual = atual->prox;
+        }while(atual!=lista);
+        
+    }
+
+}
+
 
 int main(){
    nostream * raizdastream = NULL; // raiz começando vazia 
@@ -157,6 +190,7 @@ int main(){
         printf("2. Mostrar Stream\n");
         printf("3. Adicionar categoria ao stream\n");
         printf("4- Buscar stream\n");
+        printf("5- Listar categorias de uma stream\n");
         scanf("%d", &op);
         getchar();
 
@@ -198,7 +232,7 @@ int main(){
                 printf("Tipo da categoria: \n");
                 fgets(tipocat, sizeof(tipocat), stdin);
                 tipocat[strcspn(tipocat, "\n")] = 0; 
-                
+
                 printf("Nome Categoria: \n");
                 fgets(nomecat, sizeof(nomecat),stdin);
                 nomecat[strcspn(nomecat, "\n")] = 0; 
@@ -228,7 +262,21 @@ int main(){
                 break;
             }
             
-       
+        case 5:
+            char nomeStream[100];
+            printf("Nome stream: \n");
+            fgets(nomeStream, sizeof(nomeStream), stdin);
+            nomeStream[strcspn(nomeStream, "\n")] = 0;
+            nostream *encontrouNo = BuscaStream(raizdastream, nomeStream);
+
+            if(encontrouNo != NULL){
+                mostrarcategoriaStream(raizdastream, nomeStream);
+                break;
+            }else{
+                printf("Sem categoria cadastrada! \n");
+                break;
+            }
+
         default:
         printf("Opcao invalida/n");
 
