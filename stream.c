@@ -16,20 +16,25 @@ typedef struct ArvProg{
 typedef struct ListaCat{
     char tipo[100];
     char nomecat[100];
-    struct ARVCat *ant;
-    struct ARVcat *prox;
+    struct ListaCat *ant;
+    struct ListaCat *prox;
     struct ArvProg *prog; //ponteiro para a arvore de programas 
 }ListaCat;
 //no da arvore de streams
 typedef struct nostream{
     char nome[100];
     char site [100];
-    struct ARVcat *cat;
+    struct ListaCat *cat;
     struct nostream *esq; // ponteiro para sub arvore esquerda 
     struct nostream *direita; // ponteiro para sub arvore direita 
 
 
 }nostream;
+
+ListaCat *criarcategoria(){
+    return NULL;
+
+}
 
 nostream *criarstream(char *nome, char *site){
     nostream* novo = (nostream*)malloc(sizeof (nostream));
@@ -66,7 +71,8 @@ nostream *inserirstream(nostream *raiz, char *nome, char *site){
         raiz -> direita = inserirstream( raiz -> direita, nome, site);
     }else{
         printf("Stream * %s * ja existente na base de dados.\n", nome);
-    } 
+    }
+
     return raiz;
 
 
@@ -84,10 +90,7 @@ void mostrarstream(nostream*raiz){
 }
 
 
-ListaCat *criarcategoria(){
-    return NULL;
 
-}
 
 ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria){
     ListaCat *novo = (ListaCat *) malloc(sizeof(ListaCat));
@@ -104,7 +107,7 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
     ListaCat *atual = lista;
 
     do{
-        if(strcpm(novo->nomecat, atual->nomecat) < 0){
+        if(strcmp(novo->nomecat, atual->nomecat) < 0){
             break;
         }
         atual = atual->prox;
@@ -117,6 +120,8 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
     novo-> ant =anterior;
     anterior->prox = novo;
     atual->ant= novo;
+
+    printf("Categoria adicionada com sucesso!\n");
 
     if(strcmp(novo->nomecat, lista->nomecat)< 0){
         return novo;
@@ -147,22 +152,27 @@ int main(){
    int op;
 
    do{
-    printf("\nBiblioteca de streams\n");
-    printf("1. Cadastrar Stream\n");
-    printf("2. Mostrar Stream\n");
-    scanf("%d", &op);
-    getchar();
+        printf("\nBiblioteca de streams\n");
+        printf("1. Cadastrar Stream\n");
+        printf("2. Mostrar Stream\n");
+        printf("3. Adicionar categoria ao stream\n");
+        printf("4- Buscar stream\n");
+        scanf("%d", &op);
+        getchar();
 
 
        switch (op){
         case 1: 
         printf("Digite o nome do stream:\n");
         fgets(nome, sizeof(nome), stdin);
+        nome[strcspn(nome, "\n")] = 0; 
+
         printf("Digite o site da stream:\n");
         fgets(site, sizeof(site), stdin);
-        
+        site[strcspn(site, "\n")] = 0; 
+
         raizdastream = inserirstream(raizdastream, nome, site);
-        printf("Stream cadadastrada com sucesso\n");
+
         break;
 
         case 2: 
@@ -175,23 +185,50 @@ int main(){
         }
         break;
         case 3: 
-            printf("Adicionar Categoria");
+            printf("Adicionar Categoria\n");
             printf("Adicionar a qual stream? Digite o nome: \n");
             char nomestream[100];
-            scanf('%s', nomestream);
-            nostream *achou = BuscaStream(raizdastream, &nomestream);
+            fgets(nomestream, sizeof(nomestream), stdin);
+            nomestream[strcspn(nomestream, "\n")] = 0;
+            nostream *achou = BuscaStream(raizdastream, nomestream);
 
-            if(achou == NULL){
-                printf("Stream não cadastrada!\n");
-            }else{
+            if(achou != NULL){
                 char tipocat[100];
                 char nomecat[100];
                 printf("Tipo da categoria: \n");
-                scanf("%s", tipocat);
-                printf("Nome Catego")
-                adicionarcategoria(raizdastream)
+                fgets(tipocat, sizeof(tipocat), stdin);
+                tipocat[strcspn(tipocat, "\n")] = 0; 
+                
+                printf("Nome Categoria: \n");
+                fgets(nomecat, sizeof(nomecat),stdin);
+                nomecat[strcspn(nomecat, "\n")] = 0; 
+                
+                achou->cat = adicionarcategoria(achou->cat, tipocat, nomecat);
+                printf("\n");
+            }else{
+                printf("Stream não cadastrada\n");
             }
+            break;
+        case 4:
+            printf("\nBUSCAR STREAM\n");
+            char nomeS[100];
+            printf("Nome stream: \n");
+            fgets(nomeS, sizeof(nomeS), stdin);
+            nomeS[strcspn(nomeS, "\n")] = 0;
+            nostream *achouNo = BuscaStream(raizdastream, nomeS);
 
+            if(achouNo != NULL){
+                printf("\n----------------------\n");
+                printf("Nome: %s \n", achouNo->nome);
+                printf("Site: %s \n", achouNo->site);
+                printf("----------------------\n");
+                break;
+            }else{
+                printf("\n Stream não encontrado! \n");
+                break;
+            }
+            
+       
         default:
         printf("Opcao invalida/n");
 
