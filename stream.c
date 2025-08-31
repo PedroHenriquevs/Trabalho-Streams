@@ -149,30 +149,29 @@ nostream *BuscaStream(nostream *arvstream, char *nome){
 void mostrarcategoriaStream(nostream *stream, char *nomestream){
     
     ListaCat *lista = stream->cat;
-    if (lista == NULL) {
-        printf("\nO stream *%s* não possui categorias cadastradas.\n", nomestream);
-        return;
-    }
-
-    int cmp = strcmp(nomestream, stream->nome);
-
-    if(cmp < 0){
-        return mostrarcategoriaStream(stream->esq, nomestream);
-    }else if(cmp > 0){
-        return mostrarcategoriaStream(stream->direita, nomestream);
-    }else{
-
-        ListaCat *atual = lista;
-        printf("\nLISTA DE CATEGORIAS DO STREAM *%s*\n", nomestream);
-        do{
-            printf("-----------------------\n");
-            printf("Tipo: %s\n", atual->tipo);
-            printf("Nome categoria: %s\n", atual->nomecat);
-            printf("--------------------\n");
-
-            atual = atual->prox;
-        }while(atual!=lista);
+    if (lista != NULL) {
         
+        int cmp = strcmp(nomestream, stream->nome);
+
+        if(cmp < 0){
+            return mostrarcategoriaStream(stream->esq, nomestream);
+        }else if(cmp > 0){
+            return mostrarcategoriaStream(stream->direita, nomestream);
+        }else{
+
+            ListaCat *atual = lista;
+            printf("\nLISTA DE CATEGORIAS DO STREAM *%s*\n", nomestream);
+            do{
+                printf("-----------------------\n");
+                printf("Tipo: %s\n", atual->tipo);
+                printf("Nome categoria: %s\n", atual->nomecat);
+                printf("--------------------\n");
+
+                atual = atual->prox;
+            }while(atual!=lista);
+        }
+    }else{
+        printf("\nO stream *%s* não possui categorias cadastradas.\n", nomestream);
     }
 
 }
