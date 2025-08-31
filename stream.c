@@ -31,6 +31,22 @@ typedef struct nostream{
 
 }nostream;
 
+typedef struct histTrabstream{
+    char nomeStream[100];
+    char data_inicio[100];
+    char data_termino[100];
+    struct HistStream *prox;
+    struct HistStream *ant;
+}HistStream;
+
+typedef struct listaapresent{
+    char nomeapresent[100];
+    char cattrab[100];
+    char streamtrabalha[100];
+    struct HistStream *streamhist;
+
+}ListaApr;
+
 ListaCat *criarcategoria(){
     return NULL;
 
