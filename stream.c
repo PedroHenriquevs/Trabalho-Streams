@@ -16,7 +16,6 @@ typedef struct ArvProg{
 typedef struct ListaCat{
     char tipo[100];
     char nomecat[100];
-    struct ListaCat *ant;
     struct ListaCat *prox;
     struct ArvProg *prog; //ponteiro para a arvore de programas 
 }ListaCat;
@@ -39,11 +38,13 @@ typedef struct histTrabstream{
     struct HistStream *ant;
 }HistStream;
 
-typedef struct listaapresent{
+typedef struct ListaApr{
     char nomeapresent[100];
     char cattrab[100];
     char streamtrabalha[100];
     struct HistStream *streamhist;
+    struct ListaApr *prox;
+    struct ListaApr *ant;
 
 }ListaApr;
 
@@ -110,43 +111,49 @@ void mostrarstream(nostream*raiz){
 
 
 
-ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria){
+ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria) {
     ListaCat *novo = (ListaCat *) malloc(sizeof(ListaCat));
     strcpy(novo->tipo, tipocat);
     strcpy(novo->nomecat, nomecategoria);
-    
-    if(lista == NULL){
-        novo->prox = novo;
-        novo->ant = novo;
 
+    // Caso a lista esteja vazia
+    if (lista == NULL) {
+        novo->prox = novo; 
+        printf("Categoria adicionada com sucesso!\n");
         return novo;
     }
-    
-    ListaCat *atual = lista;
 
-    do{
-        if(strcmp(novo->nomecat, atual->nomecat) < 0){
+    ListaCat *atual = lista;
+    ListaCat *anterior = NULL;
+
+
+    do {
+        if (strcmp(novo->nomecat, atual->nomecat) < 0) {
             break;
         }
+        anterior = atual;
         atual = atual->prox;
+    } while (atual != lista);
 
-    }while(atual!= lista);
-
-    ListaCat *anterior = atual->ant;
-
-    novo->prox = atual;
-    novo-> ant =anterior;
-    anterior->prox = novo;
-    atual->ant= novo;
+    if (anterior == NULL) {
+        
+        ListaCat *ultimo = lista;
+        while (ultimo->prox != lista) {
+            ultimo = ultimo->prox;
+        }
+        novo->prox = lista;
+        ultimo->prox = novo;
+        lista = novo; 
+    } else {
+       
+        novo->prox = atual;
+        anterior->prox = novo;
+    }
 
     printf("Categoria adicionada com sucesso!\n");
-
-    if(strcmp(novo->nomecat, lista->nomecat)< 0){
-        return novo;
-    }else{
-        return lista;
-    }
+    return lista;
 }
+
 
 nostream *BuscaStream(nostream *arvstream, char *nome){
     if(arvstream != NULL){
@@ -192,6 +199,45 @@ void mostrarcategoriaStream(nostream *stream, char *nomestream){
 
 }
 
+ListaApr *criarListaApr(){
+    return NULL;
+}
+
+ListaApr *adicionarApr(ListaApr *listaApr, char *nome, char *categoria, char *stream){
+    ListaApr *novo= (ListaApr *) malloc(sizeof(ListaApr));
+    strcpy(novo->nomeapresent, nome);
+    strcpy(novo->cattrab,categoria);
+    strcpy(novo->streamtrabalha, stream);
+
+    if(listaApr == NULL){
+        novo->prox = novo;
+        novo->ant= novo;
+        printf("Apresentador *%s* adicionado com sucesso! \n", nome);
+        return novo;
+    }
+
+    ListaApr *atual = listaApr;
+
+    do{
+        if(strcmp(novo->nomeapresent, atual->nomeapresent)< 0){
+            break;
+        }
+        atual = atual->prox;
+    }while(atual != listaApr);
+    ListaApr *anterior = atual->ant;
+
+    novo->prox = atual;
+    anterior->prox = novo;
+    novo->ant = anterior;
+    atual->ant = novo;
+
+    if (strcmp(novo->nomeapresent, listaApr->nomeapresent) < 0) {
+        listaApr = novo;
+    }
+
+    return listaApr;
+    
+}
 
 int main(){
    nostream * raizdastream = NULL; // raiz começando vazia 
