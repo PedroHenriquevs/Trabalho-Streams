@@ -259,6 +259,25 @@ ListaApr *adicionarApr(ListaApr *listaApr, char *nome, char *categoria, char *st
     return listaApr;
 }
 
+void mostrarStreamsporCategoria(nostream *streams, char *categoria){
+    char *listaStreams = (char *) malloc(sizeof(char));
+    if(streams != NULL){
+        mostrarStreamsporCategoria(streams->esq, categoria);
+        
+        ListaCat *categorias = streams->cat;
+        printf("Categoria presente nas streams: \n");
+        while(categorias!= NULL){
+            if(strcspn(categorias->nomecat, categoria) == 0){
+                printf("%s\n", streams->nome);
+            }
+        }
+
+        mostrarStreamsporCategoria(streams->direita, categoria);
+
+
+    }
+}
+
 int main(){
    nostream * raizdastream = NULL; // raiz começando vazia
    ListaApr * listaApresentadores = NULL;
