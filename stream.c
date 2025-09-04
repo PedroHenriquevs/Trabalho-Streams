@@ -244,6 +244,19 @@ void buscarProgramasNaStream(nostream* streambuscada, char *dia, char *hora){
     }while(categoriaatual != streambuscada->cat);
 }
 
+  void mostrarprogpordia(ArvProg *raiz, char *dia){
+    if(raiz = NULL){
+        return;
+    }
+
+    mostrarprogpordia(raiz->esq, dia);
+      if(strcmp(raiz->periodo, dia) == 0){
+        printf("pograma: %s (hora: s, apresentador:%s)\n", raiz->nomeProg, raiz->hora_inicio, raiz->nome_apresent);
+      }
+
+      mostrarprogpordia(raiz->dir, dia);
+    }
+
 ListaApr *criarListaApr(){
     return NULL;
 }
@@ -301,6 +314,7 @@ int main(){
         printf("7. Listar Categorias de uma Stream\n");
         printf("8. Listar Programas de uma Categoria\n");
         printf("9. Buscar Programa por Stream, Dia e Hora\n");
+        printf("11. Listar programa por dia da semana em uma categoria:\n");
         printf("0. Sair\n");
         scanf("%d", &op);
         getchar();
@@ -485,6 +499,40 @@ int main(){
             printf("Programas em '%s' no dia '%s' as '%s'\n", nome_stream_busca, dia_busca, hora_busca);
             buscarProgramasNaStream(streamencontrada, dia_busca, hora_busca);
             break;
+        }
+        case 11:{
+            char nome_stream[100];
+            char nome_busca[100];
+            char dia_busca[100];
+
+            printf("Digite  o nome da stream:\n");
+            fgets(nome_stream, sizeof(nome_stream), stdin);
+            nome_stream[strcspn(nome_stream, "\n")] = 0;
+            nostream*stream_enc = BuscaStream(raizdastream, nome_stream);
+            if(stream_enc == NULL){
+                printf("Stream nao encontrada\n");
+                break;
+            }
+
+            printf("digite onome da categoria:\n");
+            fgets(nome_busca, sizeof(nome_busca), stdin);
+            nome_busca[strcspn(nome_busca, "\n")] = 0;  
+
+            ListaCat* categoria_enc = buscarcategoria(stream_enc->cat, nome_busca);
+            if(categoria_enc == NULL){
+                printf("Categoria nao encontrada\n");
+                break;
+            }
+
+            printf("digite o dia da semana:\n");
+            fgets(dia_busca, sizeof(dia_busca), stdin);
+            dia_busca[strcspn(dia_busca, "\n")] = 0;
+
+            printf("programas na categoria %s no dia %s: \n", nome_busca, dia_busca);
+            mostrarprogpordia(categoria_enc->prog, dia_busca);
+            break;
+
+
         }
         case 0:
             printf("Saindo...\n");
