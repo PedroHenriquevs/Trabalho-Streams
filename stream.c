@@ -390,10 +390,10 @@ int main(){
         printf("7. Listar Categorias de uma Stream\n");
         printf("8. Listar Programas de uma Categoria\n");
         printf("9. Buscar Programa por Stream, Dia e Hora\n");
+        printf("10. Listar streams pelo tipo de categoria:\n");
         printf("11. Listar programa por dia da semana em uma categoria:\n");
         printf("12. Listar apresentadores por stream:\n");
         printf("13. Listar apresentadores por categoria:\n");
-        printf("14. Listar streams pelo tipo de categoria:\n");
         printf("0. Sair\n");
         scanf("%d", &op);
         getchar();
@@ -579,6 +579,15 @@ int main(){
             buscarProgramasNaStream(streamencontrada, dia_busca, hora_busca);
             break;
         }
+        case 10:{
+            char tipoBusca[100];
+            printf("Tipo da categoria: ");
+            fgets(tipoBusca, sizeof(tipoBusca), stdin);
+            tipoBusca[strcspn(tipoBusca, "\n")] = 0;
+            printf("Tipo de categoria presente nas streams: \n");
+            mostrarStreamsporCategoria(raizdastream, tipoBusca);
+            break;
+        }
         case 11:{
             char nome_stream[100];
             char nome_busca[100];
@@ -637,13 +646,7 @@ int main(){
 
         }
         case 14:{
-            char tipoBusca[100];
-            printf("Tipo da categoria: ");
-            fgets(tipoBusca, sizeof(tipoBusca), stdin);
-            tipoBusca[strcspn(tipoBusca, "\n")] = 0;
-            printf("Tipo de categoria presente nas streams: \n");
-            mostrarStreamsporCategoria(raizdastream, tipoBusca);
-            break;
+            
 
         }
         case 0:
