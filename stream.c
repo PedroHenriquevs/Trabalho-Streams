@@ -371,6 +371,23 @@ void mostrarApresentadorporCategoria(ListaApr *apresentadores, char *categoria){
     } 
 }
 
+void mostrardadosPrograma(nostream *stream, char *nomeprograma){
+    if(stream != NULL){
+        mostrardadosPrograma(stream->esq, nomeprograma);
+        ListaCat *lista = stream->cat
+        if(lista!=NULL){
+            ListaCat*atual =lista;
+            do{
+                ArvProg *prog_atual = atual->prog;
+                if(prog_atual != NULL){
+                    ArvProg *noprocura = prog_atual;
+                    
+                }
+
+            }while (atual != lista);
+        }
+    }
+}
 
 
 int main(){
