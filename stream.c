@@ -244,18 +244,16 @@ void buscarProgramasNaStream(nostream* streambuscada, char *dia, char *hora){
     }while(categoriaatual != streambuscada->cat);
 }
 
-  void mostrarprogpordia(ArvProg *raiz, char *dia){
+void mostrarprogpordia(ArvProg *raiz, char *dia){
     if(raiz == NULL){
         return;
     }
-
     mostrarprogpordia(raiz->esq, dia);
-      if(strcmp(raiz->periodo, dia) == 0){
+    if(strcmp(raiz->periodo, dia) == 0){
         printf("pograma: %s (hora: %s - apresentador:%s)\n", raiz->nomeProg, raiz->hora_inicio, raiz->nome_apresent);
-      }
-
-      mostrarprogpordia(raiz->dir, dia);
     }
+    mostrarprogpordia(raiz->dir, dia);
+}
 
 ListaApr *criarListaApr(){
     return NULL;
@@ -273,7 +271,6 @@ ListaApr *adicionarApr(ListaApr *listaApr, char *nome, char *categoria, char *st
         printf("Apresentador *%s* adicionado com sucesso! \n", nome);
         return novo;
     }
-
     ListaApr *atual = listaApr;
     do{
         if(strcmp(novo->nomeapresent, atual->nomeapresent) == 0){
@@ -286,7 +283,6 @@ ListaApr *adicionarApr(ListaApr *listaApr, char *nome, char *categoria, char *st
         }
         atual = atual->prox;
     }while(atual != listaApr);
-
     ListaApr *anterior = atual->ant;
     novo->prox = atual;
     anterior->prox = novo;
@@ -299,30 +295,106 @@ ListaApr *adicionarApr(ListaApr *listaApr, char *nome, char *categoria, char *st
     return listaApr;
 }
 
-
-   void mostrarapresentador_stream(ListaApr *lista, char* stream){
-        if(lista == NULL){
-            printf("nenhum apresentador cadastrado.\n");
-        }
-
-        ListaApr *atual = lista;
-        int encontrou = 0;
-        do{
-            if(strcmp(atual->streamtrabalha, stream) == 0){
-              if(!encontrou){
-                printf("apresentadores que trabalham na stream *%s*:\n", stream);
-                encontrou = 1;
-              }
-              printf("nome; %s - categoria: %s\n", atual->nomeapresent, atual->cattrab);
-
+void mostrarapresentador_stream(ListaApr *lista, char* stream){
+    if(lista == NULL){
+        printf("nenhum apresentador cadastrado.\n");
+        return;
+    }
+    ListaApr *atual = lista;
+    int encontrou = 0;
+    do{
+        if(strcmp(atual->streamtrabalha, stream) == 0){
+            if(!encontrou){
+            printf("apresentadores que trabalham na stream *%s*:\n", stream);
+            encontrou = 1;
             }
-            atual = atual->prox;
-
-        }while(atual != lista);
-        if(!encontrou){
-            printf("nenhum apresentador encontrado para a stream *%s*.\n", stream);
+            printf("nome; %s - categoria: %s\n", atual->nomeapresent, atual->cattrab);
         }
-   }
+        atual = atual->prox;
+    }while(atual != lista);
+    if(!encontrou){
+        printf("nenhum apresentador encontrado para a stream *%s*.\n", stream);
+    }
+}
+
+void mostrarApresentadorporCategoria(ListaApr *apresentadores, char *categoria){
+    if(apresentadores == NULL){
+        printf("Sem apresentadores cadastrados");
+        return;
+    }
+    int achado = 0;
+    ListaApr *inicio = apresentadores;
+    do{
+        if(strcmp(apresentadores->cattrab, categoria)==0){
+            if(!achado){
+                printf("Apresentadores da categoria '%s':\n", categoria);
+                achado = 1;
+            }
+            printf("-> %s\n", apresentadores->nomeapresent);
+        }
+        apresentadores=apresentadores->prox;
+    }
+    while(apresentadores != inicio);
+    if(!achado){
+        printf("Sem apresentadores para essa categoria\n");
+    }
+}
+
+ListaCat *removercategoria(ListaCat *lista, char *nome){
+    if(lista == NULL){
+        printf("nao existe categoria para remover\n");
+        return NULL;
+    }
+    ListaCat *noremove = buscarcategoria(lista, nome);
+    if(noremove == NULL){
+        printf("cstegoria nao encontrada\n");
+        return lista;
+    }
+    //verifica se tem programa casdastrado
+    if(noremove->prog !=NULL){
+        printf("nao eh possivel remover categoria com programa cadastrdo\n");
+        return lista;
+    }
+    //caso o no seja unico na lista
+    if(noremove->prox == noremove){
+        free(noremove);
+        printf("categoria removida\n");
+        return NULL;
+    }
+    //reorganizando os ponteiros
+    noremove->ant->prox = noremove->prox;
+    noremove->prox->ant = noremove->ant;
+    // novo inicio da lista
+    ListaCat* novoincio = (noremove == lista) ? noremove->prox : lista;
+    free(noremove);
+    printf("categoria removida\n");
+    return novoincio;
+}
+
+int buscarprog_por_apresentador(ArvProg*raiz, char* nome_apresent){
+     if(raiz == NULL){
+        return 0;
+     }
+     if(strcmp(raiz->nome_apresent, nome_apresent)== 0){
+        return 1;
+     }
+     return buscarprog_por_apresentador(raiz->esq, nome_apresent) || buscarprog_por_apresentador(raiz->dir, nome_apresent);
+}
+
+int apresentador_prog_stream(nostream *streamalvo, char* nome_apresent){
+     if(streamalvo == NULL || streamalvo-> cat == NULL){
+        return 0;
+     }
+    // percorrer a lista de cat da stream
+     ListaCat *cat_atual = streamalvo->cat;
+     do{
+        if(buscarprog_por_apresentador(cat_atual->prog, nome_apresent)){
+            return 1;
+        }
+        cat_atual = cat_atual->prox;
+     }while(cat_atual != streamalvo->cat);
+     return 0;
+}
 
 int main(){
    nostream * raizdastream = NULL;
@@ -343,6 +415,9 @@ int main(){
         printf("9. Buscar Programa por Stream, Dia e Hora\n");
         printf("11. Listar programa por dia da semana em uma categoria:\n");
         printf("12. Listar apresentadores por stream:\n");
+        printf("13. Listar apresentadores por categoria:\n");
+        printf("15. remover categoria de uma stream:\n");
+        printf("16. Alterar stream de um apresentador\n");
         printf("0. Sair\n");
         scanf("%d", &op);
         getchar();
@@ -504,26 +579,20 @@ int main(){
             char nome_stream_busca[100];
             char dia_busca[100];
             char hora_busca[100];
-
             printf("digite o nome da stream:\n");
             fgets(nome_stream_busca, sizeof(nome_stream_busca), stdin);
             nome_stream_busca[strcspn(nome_stream_busca, "\n")] = 0;
-
             nostream *streamencontrada = BuscaStream(raizdastream, nome_stream_busca);
-
             if(streamencontrada == NULL){
                 printf("stream nao encontrada\n");
                 break;
             }
-
             printf("digite o dia do programa:\n");
             fgets(dia_busca, sizeof(dia_busca), stdin);
             dia_busca[strcspn(dia_busca, "\n")] = 0;
-
             printf("digite o horario de inicio: \n");
             fgets(hora_busca, sizeof(hora_busca), stdin);
             hora_busca[strcspn(hora_busca, "\n")] = 0;
-
             printf("Programas em '%s' no dia '%s' as '%s'\n", nome_stream_busca, dia_busca, hora_busca);
             buscarProgramasNaStream(streamencontrada, dia_busca, hora_busca);
             break;
@@ -532,7 +601,6 @@ int main(){
             char nome_stream[100];
             char nome_busca[100];
             char dia_busca[100];
-
             printf("Digite  o nome da stream:\n");
             fgets(nome_stream, sizeof(nome_stream), stdin);
             nome_stream[strcspn(nome_stream, "\n")] = 0;
@@ -541,34 +609,26 @@ int main(){
                 printf("Stream nao encontrada\n");
                 break;
             }
-
             printf("digite onome da categoria:\n");
             fgets(nome_busca, sizeof(nome_busca), stdin);
-            nome_busca[strcspn(nome_busca, "\n")] = 0;  
-
+            nome_busca[strcspn(nome_busca, "\n")] = 0;
             ListaCat* categoria_enc = buscarcategoria(stream_enc->cat, nome_busca);
             if(categoria_enc == NULL){
                 printf("Categoria nao encontrada\n");
                 break;
             }
-
             printf("digite o dia da semana:\n");
             fgets(dia_busca, sizeof(dia_busca), stdin);
             dia_busca[strcspn(dia_busca, "\n")] = 0;
-
             printf("programas na categoria %s no dia %s: \n", nome_busca, dia_busca);
             mostrarprogpordia(categoria_enc->prog, dia_busca);
             break;
-
-
         }
-
         case 12:{
             char nome_stream_busca[100];
             printf("digite o nome da stream:\n");
             fgets(nome_stream_busca, sizeof(nome_stream_busca), stdin);
             nome_stream_busca[strcspn(nome_stream_busca, "\n")] =0;
-            
             if(BuscaStream(raizdastream, nome_stream_busca) == NULL){
                 printf("stream nao encontrada\n");
                 break;
@@ -576,7 +636,73 @@ int main(){
             mostrarapresentador_stream(listaApresentadores, nome_stream_busca);
             break;
         }
+         case 13:{
+            char nomecategoria[100];
+            printf("Digite o nome categoria: ");
+            fgets(nomecategoria, sizeof(nomecategoria), stdin);
+            nomecategoria[strcspn(nomecategoria, "\n")] = 0;
+            mostrarApresentadorporCategoria(listaApresentadores, nomecategoria);
+            break;
+        }
+        case 15:{
+            char nomestream_remove[100];
+            char nomecategoria_remove[100];
+            printf("Digite o nome da stream: ");
+            fgets(nomestream_remove, sizeof(nomestream_remove), stdin);
+            nomestream_remove[strcspn(nomestream_remove, "\n")] = 0;
+            nostream* streamencontrada = BuscaStream(raizdastream, nomestream_remove);
+            if(streamencontrada == NULL){
+                printf("stream nao encontrada.\n");
+                break;
+            }
+            printf("digite o nome da categoria a ser removida: ");
+            fgets(nomecategoria_remove, sizeof(nomecategoria_remove), stdin);
+            nomecategoria_remove[strcspn(nomecategoria_remove, "\n")] = 0;
+            streamencontrada->cat = removercategoria(streamencontrada->cat, nomecategoria_remove);
+            break;
+        }
+        case 16:{
+            char nome_apresentador[100];
+            char novastream[100];
+            printf("digite o nome do apresentador que deseja alterar a stream: ");
+            fgets(nome_apresentador, sizeof(nome_apresentador), stdin);
+            nome_apresentador[strcspn(nome_apresentador, "\n")] = 0;
+            
+            ListaApr* apresentador = NULL;
+            if (listaApresentadores != NULL) {
+                ListaApr* atual = listaApresentadores;
+                do {
+                    if (strcmp(atual->nomeapresent, nome_apresentador) == 0) {
+                        apresentador = atual;
+                        break;
+                    }
+                    atual = atual->prox;
+                } while (atual != listaApresentadores);
+            }
 
+            if(apresentador == NULL){
+                printf("apresentador nao encontrado\n");
+                break;
+            }
+            char streamantiga[100];
+            strcpy(streamantiga, apresentador->streamtrabalha);
+            printf("digite o nome da nova stream: ");
+            fgets(novastream, sizeof(novastream), stdin);
+            novastream[strcspn(novastream, "\n")] = 0;
+            nostream* nova_stream = BuscaStream(raizdastream, novastream);
+            if(nova_stream == NULL){
+                printf("stream nao encontrada\n");
+                break;
+            }
+            nostream* stream_antiga = BuscaStream(raizdastream, streamantiga);
+            if(apresentador_prog_stream(stream_antiga, nome_apresentador)){
+                printf("apresentador possui programas na stream atual\n");
+                break;
+            }
+            strcpy(apresentador->streamtrabalha, novastream);
+            printf("stream do apresentador alterada com sucesso\n");
+            break;
+        }
         case 0:
             printf("Saindo...\n");
             break;
