@@ -11,6 +11,7 @@ typedef struct ArvProg{
     char nome_apresent[100];
     struct ArvProg *esq;
     struct ArvProg *dir;
+    int altura;
 }ArvProg;
 
 typedef struct ListaCat{
@@ -27,6 +28,7 @@ typedef struct nostream{
     struct ListaCat *cat;
     struct nostream *esq;
     struct nostream *direita;
+    int altura;
 }nostream;
 
 typedef struct histTrabstream{
@@ -45,6 +47,40 @@ typedef struct ListaApr{
     struct ListaApr *prox;
     struct ListaApr *ant;
 }ListaApr;
+
+int altura(ArvProg*no){
+    if(no == NULL){
+        return 0;
+    }
+    return no->altura;
+}
+
+int alturastream(nostream*no){
+    if(no == NULL){
+        return 0;
+    }
+    return no->altura;
+}
+
+int ponto(int a, int b){
+    return (a > b) ? a : b;
+}
+
+int fb(ArvProg*no){
+    if(no == NULL){
+        return 0;
+    }
+    return altura(no->esq) - altura(no->dir);
+}
+
+int fb_stream(nostream*no){
+    if(no == NULL){
+        return 0;
+    }
+    return alturastream(no->esq) - alturastream(no->direita);
+}
+
+
 
 ListaCat *criarcategoria(){
     return NULL;
@@ -341,29 +377,27 @@ void mostrarStreamsporCategoria(nostream *streams, char *tipocategoria){
 }
 
 void mostrarApresentadorporCategoria(ListaApr *apresentadores, char *categoria){
-
     if(apresentadores == NULL){
         printf("Sem apresentadores cadastrados");
         return;
-
     }
-
     int achado = 0;
     ListaApr *inicio = apresentadores;
     do{
         if(strcmp(apresentadores->cattrab, categoria)==0){
+            if(!achado){
+                printf("Apresentadores da categoria '%s':\n", categoria);
+                achado = 1;
+            }
             printf("-> %s\n", apresentadores->nomeapresent);
-            achado = 1;
         }
         apresentadores=apresentadores->prox;
     }
     while(apresentadores != inicio);
-
     if(!achado){
         printf("Sem apresentadores para essa categoria\n");
-    } 
+    }
 }
-
 
 ListaCat *removercategoria(ListaCat *lista, char *nome){
     if(lista == NULL){
@@ -421,34 +455,6 @@ int apresentador_prog_stream(nostream *streamalvo, char* nome_apresent){
      return 0;
 }
 
-void mostrardadosPrograma(nostream *stream, char *nomeprograma){
-    if(stream != NULL){
-        mostrardadosPrograma(stream->esq, nomeprograma);
-        ListaCat *lista = stream->cat;
-        if(lista!=NULL){
-            ListaCat*atual =lista;
-            do{
-                ArvProg *prog_atual = atual->prog;
-                if(prog_atual != NULL){
-                    if(strcmp(prog_atual->nomeProg, nomeprograma) == 0){
-                        printf("Programa: %s\n", prog_atual->nomeProg);
-                        printf("Periodo: %s\n", prog_atual->periodo);
-                        printf("Horario: %s\n", prog_atual->hora_inicio);
-                        printf("Apresentador: %s\n", prog_atual->nome_apresent);
-                        printf("Ao Vivo: %s\n", prog_atual->ao_vivo ? "Sim" : "Nao");
-                    }
-                    
-                }
-                atual = atual->prox;
-
-            }while (atual != lista);
-        }
-        printf("A stream nao possui categorias cadastradas\n");
-    }
-    printf("não possui streams cadastradas\n");
-}
-
-
 int main(){
    nostream * raizdastream = NULL;
    ListaApr * listaApresentadores = NULL;
@@ -470,7 +476,6 @@ int main(){
         printf("11. Listar programa por dia da semana em uma categoria:\n");
         printf("12. Listar apresentadores por stream:\n");
         printf("13. Listar apresentadores por categoria:\n");
-        printf("14. Mostrar dados de um programa:\n");
         printf("15. remover categoria de uma stream:\n");
         printf("16. Alterar stream de um apresentador\n");
         printf("0. Sair\n");
@@ -709,18 +714,7 @@ int main(){
             nomecategoria[strcspn(nomecategoria, "\n")] = 0;
             mostrarApresentadorporCategoria(listaApresentadores, nomecategoria);
             break;
-
         }
-
-         case 14:{
-            char nomeprograma[100];
-            printf("Digite o nome do programa: ");
-            fgets(nomeprograma, sizeof(nomeprograma), stdin);
-            nomeprograma[strcspn(nomeprograma, "\n")] = 0;
-            mostrardadosPrograma(raizdastream, nomeprograma);
-            break;
-        }
-
         case 15:{
             char nomestream_remove[100];
             char nomecategoria_remove[100];
