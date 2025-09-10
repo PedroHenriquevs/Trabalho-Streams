@@ -16,7 +16,6 @@ typedef struct ArvProg{
 typedef struct ListaCat{
     char tipo[100];
     char nomecat[100];
-    struct ListaCat *ant;
     struct ListaCat *prox;
     struct ArvProg *prog;
 }ListaCat;
@@ -95,9 +94,10 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
     strcpy(novo->tipo, tipocat);
     strcpy(novo->nomecat, nomecategoria);
     novo->prog = NULL;
+    ListaCat *anterior = NULL;
+
     if(lista == NULL){
         novo->prox = novo;
-        novo->ant = novo;
         printf("Categoria adicionada com sucesso!\n");
         return novo;
     }
@@ -107,23 +107,38 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
             printf("Erro: Categoria '%s' ja existe.\n", novo->nomecat);
             free(novo);
             return lista;
-        }
+        }  
+    
         if(strcmp(novo->nomecat, atual->nomecat) < 0){
             break;
         }
+        anterior = atual;
         atual = atual->prox;
+
     }while(atual != lista);
-    ListaCat *anterior = atual->ant;
-    novo->prox = atual;
-    novo->ant = anterior;
-    anterior->prox = novo;
-    atual->ant = novo;
-    printf("Categoria adicionada com sucesso!\n");
-    if(strcmp(novo->nomecat, lista->nomecat) < 0){
+
+    if(anterior == NULL){
+        ListaCat *ultimo = lista;
+        while(ultimo->prox != lista){
+            ultimo = ultimo->prox;
+        }
+        novo->prox = lista;
+        ultimo->prox = novo;
         return novo;
-    }else{
+    }
+
+    if(atual != lista){
+        anterior->prox = novo;
+        novo->prox = atual;
+        printf("[MEIO] Categoria adicionada: %s\n", novo->nomecat);
         return lista;
     }
+
+    
+    anterior->prox = novo;
+    novo->prox = lista;
+    printf("[FIM] Categoria adicionada: %s\n", novo->nomecat);
+    return lista;
 }
 
 nostream *BuscaStream(nostream *arvstream, char *nome){
