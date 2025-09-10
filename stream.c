@@ -382,34 +382,62 @@ void mostrarApresentadorporCategoria(ListaApr *apresentadores, char *categoria){
 
 ListaCat *removercategoria(ListaCat *lista, char *nome){
     if(lista == NULL){
-        printf("nao existe categoria para remover\n");
+        printf("Nao existe categoria para remover\n");
         return NULL;
     }
-    ListaCat *noremove = buscarcategoria(lista, nome);
-    if(noremove == NULL){
-        printf("cstegoria nao encontrada\n");
+
+    ListaCat *atual = lista;
+    ListaCat *anterior = NULL;
+
+    // procurar a categoria
+    do {
+        if(strcmp(atual->nomecat, nome) == 0){
+            break;
+        }
+        anterior = atual;
+        atual = atual->prox;
+    } while(atual != lista);
+
+    // nao encontrou
+    if(strcmp(atual->nomecat, nome) != 0){
+        printf("Categoria nao encontrada\n");
         return lista;
     }
-    //verifica se tem programa casdastrado
-    if(noremove->prog !=NULL){
-        printf("nao eh possivel remover categoria com programa cadastrdo\n");
+
+    // verificar se tem programa cadastrado
+    if(atual->prog != NULL){
+        printf("Nao eh possivel remover categoria com programa cadastrado\n");
         return lista;
     }
-    //caso o no seja unico na lista
-    if(noremove->prox == noremove){
-        free(noremove);
-        printf("categoria removida\n");
+
+    // caso unico no na lista
+    if(atual->prox == atual){
+        free(atual);
+        printf("Categoria removida (lista ficou vazia)\n");
         return NULL;
     }
-    //reorganizando os ponteiros
-    noremove->ant->prox = noremove->prox;
-    noremove->prox->ant = noremove->ant;
-    // novo inicio da lista
-    ListaCat* novoincio = (noremove == lista) ? noremove->prox : lista;
-    free(noremove);
-    printf("categoria removida\n");
-    return novoincio;
+
+    // caso seja o primeiro (cabeça da lista)
+    if(atual == lista){
+        // achar o ultimo pra manter circularidade
+        ListaCat *ultimo = lista;
+        while(ultimo->prox != lista){
+            ultimo = ultimo->prox;
+        }
+        lista = atual->prox;   // novo inicio
+        ultimo->prox = lista;  // ultimo aponta pro novo inicio
+        free(atual);
+        printf("Categoria removida (era a primeira)\n");
+        return lista;
+    }
+
+    // caso meio ou fim
+    anterior->prox = atual->prox;
+    free(atual);
+    printf("Categoria removida\n");
+    return lista;
 }
+
 
 int buscarprog_por_apresentador(ArvProg*raiz, char* nome_apresent){
      if(raiz == NULL){
@@ -457,10 +485,12 @@ void mostrardadosPrograma(nostream *stream, char *nomeprograma){
                 atual = atual->prox;
 
             }while (atual != lista);
+        }else{
+            printf("A stream nao possui categorias cadastradas\n");
         }
-        printf("A stream nao possui categorias cadastradas\n");
+    }else{
+        printf("não possui streams cadastradas\n");
     }
-    printf("não possui streams cadastradas\n");
 }
 
 ArvProg *Removerprograma(ArvProg **raiz, char *nome){
