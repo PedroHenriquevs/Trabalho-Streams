@@ -16,7 +16,6 @@ typedef struct ArvProg{
 typedef struct ListaCat{
     char tipo[100];
     char nomecat[100];
-    struct ListaCat *ant;
     struct ListaCat *prox;
     struct ArvProg *prog;
 }ListaCat;
@@ -95,9 +94,10 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
     strcpy(novo->tipo, tipocat);
     strcpy(novo->nomecat, nomecategoria);
     novo->prog = NULL;
+    ListaCat *anterior = NULL;
+
     if(lista == NULL){
         novo->prox = novo;
-        novo->ant = novo;
         printf("Categoria adicionada com sucesso!\n");
         return novo;
     }
@@ -107,23 +107,38 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
             printf("Erro: Categoria '%s' ja existe.\n", novo->nomecat);
             free(novo);
             return lista;
-        }
+        }  
+    
         if(strcmp(novo->nomecat, atual->nomecat) < 0){
             break;
         }
+        anterior = atual;
         atual = atual->prox;
+
     }while(atual != lista);
-    ListaCat *anterior = atual->ant;
-    novo->prox = atual;
-    novo->ant = anterior;
-    anterior->prox = novo;
-    atual->ant = novo;
-    printf("Categoria adicionada com sucesso!\n");
-    if(strcmp(novo->nomecat, lista->nomecat) < 0){
+
+    if(anterior == NULL){
+        ListaCat *ultimo = lista;
+        while(ultimo->prox != lista){
+            ultimo = ultimo->prox;
+        }
+        novo->prox = lista;
+        ultimo->prox = novo;
         return novo;
-    }else{
+    }
+
+    if(atual != lista){
+        anterior->prox = novo;
+        novo->prox = atual;
+        printf("[MEIO] Categoria adicionada: %s\n", novo->nomecat);
         return lista;
     }
+
+    
+    anterior->prox = novo;
+    novo->prox = lista;
+    printf("[FIM] Categoria adicionada: %s\n", novo->nomecat);
+    return lista;
 }
 
 nostream *BuscaStream(nostream *arvstream, char *nome){
@@ -374,19 +389,28 @@ void mostrarApresentadorporCategoria(ListaApr *apresentadores, char *categoria){
 void mostrardadosPrograma(nostream *stream, char *nomeprograma){
     if(stream != NULL){
         mostrardadosPrograma(stream->esq, nomeprograma);
-        ListaCat *lista = stream->cat
+        ListaCat *lista = stream->cat;
         if(lista!=NULL){
             ListaCat*atual =lista;
             do{
                 ArvProg *prog_atual = atual->prog;
                 if(prog_atual != NULL){
-                    ArvProg *noprocura = prog_atual;
+                    if(strcmp(prog_atual->nomeProg, nomeprograma) == 0){
+                        printf("Programa: %s\n", prog_atual->nomeProg);
+                        printf("Periodo: %s\n", prog_atual->periodo);
+                        printf("Horario: %s\n", prog_atual->hora_inicio);
+                        printf("Apresentador: %s\n", prog_atual->nome_apresent);
+                        printf("Ao Vivo: %s\n", prog_atual->ao_vivo ? "Sim" : "Nao");
+                    }
                     
                 }
+                atual = atual->prox;
 
             }while (atual != lista);
         }
+        printf("A stream nao possui categorias cadastradas\n");
     }
+    printf("não possui streams cadastradas\n");
 }
 
 
@@ -411,6 +435,7 @@ int main(){
         printf("11. Listar programa por dia da semana em uma categoria:\n");
         printf("12. Listar apresentadores por stream:\n");
         printf("13. Listar apresentadores por categoria:\n");
+        printf("14. Mostrar dados de um programa:\n");
         printf("0. Sair\n");
         scanf("%d", &op);
         getchar();
@@ -663,7 +688,11 @@ int main(){
 
         }
         case 14:{
-            
+            char nomeprograma[100];
+            printf("Digite o nome do programa: ");
+            fgets(nomeprograma, sizeof(nomeprograma), stdin);
+            nomeprograma[strcspn(nomeprograma, "\n")] = 0;
+            mostrardadosPrograma(raizdastream, nomeprograma);
 
         }
         case 0:
