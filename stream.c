@@ -555,24 +555,20 @@ int main(){
             listaApresentadores = adicionarApr(listaApresentadores, nome_apr, cat_apr, stream_apr, raizdastream);
             break;
         }
-        case 5:{
+       case 5:{
             char nome_stream_prog[100];
             char nome_categoria_prog[100];
-
             printf("Digite o nome da stream para adicionar o programa: ");
             fgets(nome_stream_prog, sizeof(nome_stream_prog), stdin);
             nome_stream_prog[strcspn(nome_stream_prog, "\n")] = 0;
-
             nostream* streamencontrada = BuscaStream(raizdastream, nome_stream_prog);
             if(streamencontrada == NULL){
                printf("Stream nao encontrada.\n");
                break;
             }
-
             printf("Digite o nome da categoria para adicionar o programa: ");
             fgets(nome_categoria_prog, sizeof(nome_categoria_prog), stdin);
             nome_categoria_prog[strcspn(nome_categoria_prog, "\n")] = 0;
-
             ListaCat *categoriaencontrada = buscarcategoria(streamencontrada->cat, nome_categoria_prog);
             if(categoriaencontrada == NULL){
                  printf("Categoria nao encontrada.\n");
@@ -581,56 +577,41 @@ int main(){
             char nomeProg[100], periodo[100], hora[100], apresentador[100];
             int vivo_op;
             bool ao_vivo_status;
-
             printf("Digite o nome do programa: ");
             fgets(nomeProg, sizeof(nomeProg), stdin);
             nomeProg[strcspn(nomeProg, "\n")] = 0;
-
-
-            printf("Digite o dia do programa: ");
+            printf("Digite o periodo do programa: ");
             fgets(periodo, sizeof(periodo), stdin);
             periodo[strcspn(periodo, "\n")] = 0;
-
             printf("Digite a hora de inicio do programa: ");
             fgets(hora, sizeof(hora), stdin);
             hora[strcspn(hora, "\n")] = 0;
-
-            printf("O programa eh ao vivo? (1 para sim, 0 para nao): ");
-            scanf("%d", &vivo_op);
-
-             printf("Digite o nome do apresentador: ");
+            printf("Digite o nome do apresentador: ");
             fgets(apresentador, sizeof(apresentador), stdin);
             apresentador[strcspn(apresentador, "\n")] = 0;
-            //verifica se o apresentdor existe e se trabalha na stream e categoria
-            listaApresentadores= listaApresentadores;
-            int apresentador_encontrado = 0;
-            if(listaApresentadores != NULL){
-                ListaApr*atual = listaApresentadores;
-                do{
-                    if(strcmp(atual->nomeapresent, apresentador) == 0 && strcmp(atual->cattrab, nome) == 0 &&
-                        strcmp(atual->streamtrabalha, nome) == 0){
-                        apresentador_encontrado = 1;
+            printf("O programa eh ao vivo? (1 para sim, 0 para nao): ");
+            scanf("%d", &vivo_op);
+            getchar();
+            ao_vivo_status = (vivo_op == 1);
+            // Verifica se o apresentador existe na lista de apresentadores
+            ListaApr *apresentador_existente = NULL;
+            if (listaApresentadores != NULL) {
+                ListaApr *atual_apr = listaApresentadores;
+                do {
+                    if (strcmp(atual_apr->nomeapresent, apresentador) == 0) {
+                        apresentador_existente = atual_apr;
                         break;
                     }
-                    atual = atual->prox; //avanca para o proximo no
-                }while(atual != listaApresentadores);
+                    atual_apr = atual_apr->prox;
+                } while (atual_apr != listaApresentadores);
             }
-            if(!apresentador_encontrado){
-                printf(" apresentador nao encontrado ou nao trabalha na stream/categoria\n");
-                
-            }else{
+
+            if (apresentador_existente == NULL) {
+                printf("apresentador '%s' nao cadastrado.\n", apresentador);
+            } else {
                 inserirprograma(&categoriaencontrada->prog, nomeProg, periodo, hora, ao_vivo_status, apresentador);
                 printf("programa cadastrado com sucesso\n");
-                break;
-        
             }
-            
-            getchar();
-         
-
-            ao_vivo_status = (vivo_op == 1);
-            inserirprograma(&categoriaencontrada->prog, nomeProg, periodo, hora, ao_vivo_status, apresentador);
-            printf("Programa cadastrado com sucesso!\n");
             break;
         }
         case 6:{
