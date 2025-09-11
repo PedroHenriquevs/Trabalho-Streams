@@ -435,11 +435,20 @@ int apresentador_prog_stream(nostream *streamalvo, char* nome_apresent){
 }
 
 void mostrardadosPrograma(nostream *stream, char *nomeprograma){
-    if(stream != NULL){
+    if(stream == NULL){
+
+             printf("nao possui streams cadastradas\n");
+        return;
+    }
         mostrardadosPrograma(stream->esq, nomeprograma);
+
+
         ListaCat *lista = stream->cat;
-        if(lista!=NULL){
+        if(lista==NULL){
+            printf("A stream nao possui categorias cadastradas\n");
+        }else{
             ListaCat*atual =lista;
+            int encontrou = 0;
             do{
                 ArvProg *prog_atual = atual->prog;
                 if(prog_atual != NULL){
@@ -449,16 +458,21 @@ void mostrardadosPrograma(nostream *stream, char *nomeprograma){
                         printf("Horario: %s\n", prog_atual->hora_inicio);
                         printf("Apresentador: %s\n", prog_atual->nome_apresent);
                         printf("Ao Vivo: %s\n", prog_atual->ao_vivo ? "Sim" : "Nao");
+                        encontrou = 1;
                     }
                     
                 }
                 atual = atual->prox;
 
             }while (atual != lista);
-        }
-        printf("A stream nao possui categorias cadastradas\n");
+        
+        if(!encontrou){
+            printf("Programa nao encontrado\n");
+        
     }
-    printf("não possui streams cadastradas\n");
+    
+}
+   mostrardadosPrograma(stream->direita, nomeprograma);
 }
 
 
