@@ -16,7 +16,6 @@ typedef struct ArvProg{
 typedef struct ListaCat{
     char tipo[100];
     char nomecat[100];
-    struct ListaCat *ant;
     struct ListaCat *prox;
     struct ArvProg *prog;
 }ListaCat;
@@ -41,7 +40,7 @@ typedef struct ListaApr{
     char nomeapresent[100];
     char cattrab[100];
     char streamtrabalha[100];
-    struct HistStream *streamhist;
+    HistStream *streamhist;
     struct ListaApr *prox;
     struct ListaApr *ant;
 }ListaApr;
@@ -519,9 +518,9 @@ void mostrardadosPrograma(nostream *stream, char *nomeprograma){
 }
 
 //curriculo do apresentador
-HistStream* adicionarHistorico(HistStream* lista, char* nomeStream, char* inicio, char* termino) {
+HistStream* adicionarHistorico(HistStream* lista, char* streamAntiga, char* inicio, char* termino) {
     HistStream* novo = (HistStream*) malloc(sizeof(HistStream));
-    strcpy(novo->nomeStream, nomeStream);
+    strcpy(novo->nomeStream, streamAntiga);
     strcpy(novo->data_inicio, inicio);
     strcpy(novo->data_termino, termino);
     novo->prox = NULL;
@@ -540,18 +539,18 @@ HistStream* adicionarHistorico(HistStream* lista, char* nomeStream, char* inicio
 }
 
 // lcurriculo do apresentador
-void mostrarCurriculo(ListaApr* apr) {
-    if (apr == NULL) {
+void mostrarCurriculo(ListaApr* apresentador){
+    if (apresentador == NULL) {
         printf("apresentador inexistente.\n");
         return;
     }
-    printf("curriculo de %s:\n", apr->nomeapresent);
-    HistStream* atual = apr->streamhist;
-    if (atual == NULL) {
+    printf("curriculo de %s:\n", apresentador->nomeapresent);
+    HistStream* atual = apresentador->streamhist;
+    if(atual == NULL){
         printf("sem historico anterior.\n");
         return;
     }
-    while (atual != NULL) {
+    while(atual != NULL){
         printf(" stream: %s,  inicio: %s termino: %s\n",
                atual->nomeStream, atual->data_inicio, atual->data_termino);
         atual = atual->prox;
