@@ -655,3 +655,119 @@ int main(){
     }while (op!=0);
     return 0;
 }
+
+
+
+
+
+ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria){
+    ListaCat *novo = (ListaCat *) malloc(sizeof(ListaCat));
+    strcpy(novo->tipo, tipocat);
+    strcpy(novo->nomecat, nomecategoria);
+    novo->prog = NULL;
+    ListaCat *anterior = NULL;
+
+    if(lista == NULL){
+        novo->prox = novo;
+        printf("Categoria adicionada com sucesso!\n");
+        return novo;
+    }
+    ListaCat *atual = lista;
+    do{
+        if(strcmp(novo->nomecat, atual->nomecat) == 0){
+            printf("Erro: Categoria '%s' ja existe.\n", novo->nomecat);
+            free(novo);
+            return lista;
+        }  
+    
+        if(strcmp(novo->nomecat, atual->nomecat) < 0){
+            break;
+        }
+        anterior = atual;
+        atual = atual->prox;
+
+    }while(atual != lista);
+
+    if(anterior == NULL){
+        ListaCat *ultimo = lista;
+        while(ultimo->prox != lista){
+            ultimo = ultimo->prox;
+        }
+        novo->prox = lista;
+        ultimo->prox = novo;
+        return novo;
+    }
+
+    if(atual != lista){
+        anterior->prox = novo;
+        novo->prox = atual;
+        printf("[MEIO] Categoria adicionada: %s\n", novo->nomecat);
+        return lista;
+    }
+
+    
+    anterior->prox = novo;
+    novo->prox = lista;
+    printf("[FIM] Categoria adicionada: %s\n", novo->nomecat);
+    return lista;
+}
+
+
+
+ListaCat *removercategoria(ListaCat *lista, char *nome){
+    if(lista == NULL){
+        printf("Nao existe categoria para remover\n");
+        return NULL;
+    }
+
+    ListaCat *atual = lista;
+    ListaCat *anterior = NULL;
+
+    // procurar a categoria
+    do {
+        if(strcmp(atual->nomecat, nome) == 0){
+            break;
+        }
+        anterior = atual;
+        atual = atual->prox;
+    } while(atual != lista);
+
+    // nao encontrou
+    if(strcmp(atual->nomecat, nome) != 0){
+        printf("Categoria nao encontrada\n");
+        return lista;
+    }
+
+    // verificar se tem programa cadastrado
+    if(atual->prog != NULL){
+        printf("Nao eh possivel remover categoria com programa cadastrado\n");
+        return lista;
+    }
+
+    // caso unico no na lista
+    if(atual->prox == atual){
+        free(atual);
+        printf("Categoria removida (lista ficou vazia)\n");
+        return NULL;
+    }
+
+    // caso seja o primeiro (cabeça da lista)
+    if(atual == lista){
+        // achar o ultimo pra manter circularidade
+        ListaCat *ultimo = lista;
+        while(ultimo->prox != lista){
+            ultimo = ultimo->prox;
+        }
+        lista = atual->prox;   // novo inicio
+        ultimo->prox = lista;  // ultimo aponta pro novo inicio
+        free(atual);
+        printf("Categoria removida (era a primeira)\n");
+        return lista;
+    }
+
+    // caso meio ou fim
+    anterior->prox = atual->prox;
+    free(atual);
+    printf("Categoria removida\n");
+    return lista;
+}

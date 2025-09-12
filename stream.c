@@ -16,7 +16,6 @@ typedef struct ArvProg{
 typedef struct ListaCat{
     char tipo[100];
     char nomecat[100];
-    struct ListaCat *ant;
     struct ListaCat *prox;
     struct ArvProg *prog;
 }ListaCat;
@@ -131,14 +130,14 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
     if(atual != lista){
         anterior->prox = novo;
         novo->prox = atual;
-        printf("[MEIO] Categoria adicionada: %s\n", novo->nomecat);
+        printf("Categoria adicionada: %s\n", novo->nomecat);
         return lista;
     }
 
     
     anterior->prox = novo;
     novo->prox = lista;
-    printf("[FIM] Categoria adicionada: %s\n", novo->nomecat);
+    printf("Categoria adicionada: %s\n", novo->nomecat);
     return lista;
 }
 
@@ -518,6 +517,47 @@ void mostrardadosPrograma(nostream *stream, char *nomeprograma){
    mostrardadosPrograma(stream->direita, nomeprograma);
 }
 
+//curriculo do apresentador
+HistStream* adicionarHistorico(HistStream* lista, char* nomeStream, char* inicio, char* termino) {
+    HistStream* novo = (HistStream*) malloc(sizeof(HistStream));
+    strcpy(novo->nomeStream, nomeStream);
+    strcpy(novo->data_inicio, inicio);
+    strcpy(novo->data_termino, termino);
+    novo->prox = NULL;
+    novo->ant = NULL;
+
+    if (lista == NULL) {
+        return novo; 
+    }
+    HistStream* atual = lista;
+    while (atual->prox != NULL) {
+        atual = atual->prox;
+    }
+    atual->prox = novo;
+    novo->ant = atual;
+    return lista;
+}
+
+// lcurriculo do apresentador
+void mostrarCurriculo(ListaApr* apr) {
+    if (apr == NULL) {
+        printf("apresentador inexistente.\n");
+        return;
+    }
+    printf("curriculo de %s:\n", apr->nomeapresent);
+    HistStream* atual = apr->streamhist;
+    if (atual == NULL) {
+        printf("sem historico anterior.\n");
+        return;
+    }
+    while (atual != NULL) {
+        printf(" stream: %s,  inicio: %s termino: %s\n",
+               atual->nomeStream, atual->data_inicio, atual->data_termino);
+        atual = atual->prox;
+    }
+}
+
+
 
 int main(){
    nostream * raizdastream = NULL;
@@ -543,6 +583,7 @@ int main(){
         printf("14. Mostrar dados de um programa:\n");
         printf("15. remover categoria de uma stream:\n");
         printf("16. Alterar stream de um apresentador\n");
+        printf("17. Mostrar curriculo de um apresentador\n");
         printf("0. Sair\n");
         scanf("%d", &op);
         getchar();
@@ -834,6 +875,9 @@ int main(){
         case 16:{
             char nome_apresentador[100];
             char novastream[100];
+            char data_inicio[100];
+            char data_termino[100];
+
             printf("digite o nome do apresentador que deseja alterar a stream: ");
             fgets(nome_apresentador, sizeof(nome_apresentador), stdin);
             nome_apresentador[strcspn(nome_apresentador, "\n")] = 0;
@@ -856,6 +900,17 @@ int main(){
             }
             char streamantiga[100];
             strcpy(streamantiga, apresentador->streamtrabalha);
+
+            printf("digite a data de inicio na stream antiga: ");
+            fgets(data_inicio, sizeof(data_inicio), stdin);
+            data_inicio[strcspn(data_inicio, "\n")] = 0;
+
+            printf("digite a data de termino na stream antiga: ");
+            fgets(data_termino, sizeof(data_termino), stdin);
+            data_termino[strcspn(data_termino, "\n")] = 0;
+            //aqui salva o historico
+            apresentador->streamhist = adicionarHistorico(apresentador->streamhist, streamantiga, data_inicio, data_termino);
+
             printf("digite o nome da nova stream: ");
             fgets(novastream, sizeof(novastream), stdin);
             novastream[strcspn(novastream, "\n")] = 0;
@@ -873,6 +928,30 @@ int main(){
             printf("stream do apresentador alterada com sucesso\n");
             break;
         }
+
+
+        case 17:{
+        char nome_apresentador[100];
+        printf("digite o nome do apresentador: ");
+        fgets(nome_apresentador, sizeof(nome_apresentador), stdin);
+        nome_apresentador[strcspn(nome_apresentador, "\n")] = 0;
+
+        ListaApr* apresentador = NULL;
+        if (listaApresentadores != NULL) {
+            ListaApr* atual = listaApresentadores;
+            do {
+                if (strcmp(atual->nomeapresent, nome_apresentador) == 0) {
+                    apresentador = atual;
+                    break;
+                }
+                atual = atual->prox;
+            } while (atual != listaApresentadores);
+        }
+
+        mostrarCurriculo(apresentador);
+        break;
+    }
+
         case 0:
             printf("Saindo...\n");
             break;
