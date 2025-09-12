@@ -95,9 +95,10 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
     strcpy(novo->tipo, tipocat);
     strcpy(novo->nomecat, nomecategoria);
     novo->prog = NULL;
+    ListaCat *anterior = NULL;
+
     if(lista == NULL){
         novo->prox = novo;
-        novo->ant = novo;
         printf("Categoria adicionada com sucesso!\n");
         return novo;
     }
@@ -107,23 +108,38 @@ ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria
             printf("Erro: Categoria '%s' ja existe.\n", novo->nomecat);
             free(novo);
             return lista;
-        }
+        }  
+    
         if(strcmp(novo->nomecat, atual->nomecat) < 0){
             break;
         }
+        anterior = atual;
         atual = atual->prox;
+
     }while(atual != lista);
-    ListaCat *anterior = atual->ant;
-    novo->prox = atual;
-    novo->ant = anterior;
-    anterior->prox = novo;
-    atual->ant = novo;
-    printf("Categoria adicionada com sucesso!\n");
-    if(strcmp(novo->nomecat, lista->nomecat) < 0){
+
+    if(anterior == NULL){
+        ListaCat *ultimo = lista;
+        while(ultimo->prox != lista){
+            ultimo = ultimo->prox;
+        }
+        novo->prox = lista;
+        ultimo->prox = novo;
         return novo;
-    }else{
+    }
+
+    if(atual != lista){
+        anterior->prox = novo;
+        novo->prox = atual;
+        printf("[MEIO] Categoria adicionada: %s\n", novo->nomecat);
         return lista;
     }
+
+    
+    anterior->prox = novo;
+    novo->prox = lista;
+    printf("[FIM] Categoria adicionada: %s\n", novo->nomecat);
+    return lista;
 }
 
 nostream *BuscaStream(nostream *arvstream, char *nome){
@@ -380,33 +396,60 @@ void mostrarApresentadorporCategoria(ListaApr *apresentadores, char *categoria){
 
 ListaCat *removercategoria(ListaCat *lista, char *nome){
     if(lista == NULL){
-        printf("nao existe categoria para remover\n");
+        printf("Nao existe categoria para remover\n");
         return NULL;
     }
-    ListaCat *noremove = buscarcategoria(lista, nome);
-    if(noremove == NULL){
-        printf("cstegoria nao encontrada\n");
+
+    ListaCat *atual = lista;
+    ListaCat *anterior = NULL;
+
+    // procurar a categoria
+    do {
+        if(strcmp(atual->nomecat, nome) == 0){
+            break;
+        }
+        anterior = atual;
+        atual = atual->prox;
+    } while(atual != lista);
+
+    // nao encontrou
+    if(strcmp(atual->nomecat, nome) != 0){
+        printf("Categoria nao encontrada\n");
         return lista;
     }
-    //verifica se tem programa casdastrado
-    if(noremove->prog !=NULL){
-        printf("nao eh possivel remover categoria com programa cadastrdo\n");
+
+    // verificar se tem programa cadastrado
+    if(atual->prog != NULL){
+        printf("Nao eh possivel remover categoria com programa cadastrado\n");
         return lista;
     }
-    //caso o no seja unico na lista
-    if(noremove->prox == noremove){
-        free(noremove);
-        printf("categoria removida\n");
+
+    // caso unico no na lista
+    if(atual->prox == atual){
+        free(atual);
+        printf("Categoria removida (lista ficou vazia)\n");
         return NULL;
     }
-    //reorganizando os ponteiros
-    noremove->ant->prox = noremove->prox;
-    noremove->prox->ant = noremove->ant;
-    // novo inicio da lista
-    ListaCat* novoincio = (noremove == lista) ? noremove->prox : lista;
-    free(noremove);
-    printf("categoria removida\n");
-    return novoincio;
+
+    // caso seja o primeiro (cabeça da lista)
+    if(atual == lista){
+        // achar o ultimo pra manter circularidade
+        ListaCat *ultimo = lista;
+        while(ultimo->prox != lista){
+            ultimo = ultimo->prox;
+        }
+        lista = atual->prox;   // novo inicio
+        ultimo->prox = lista;  // ultimo aponta pro novo inicio
+        free(atual);
+        printf("Categoria removida (era a primeira)\n");
+        return lista;
+    }
+
+    // caso meio ou fim
+    anterior->prox = atual->prox;
+    free(atual);
+    printf("Categoria removida\n");
+    return lista;
 }
 
 int buscarprog_por_apresentador(ArvProg*raiz, char* nome_apresent){
@@ -475,6 +518,47 @@ void mostrardadosPrograma(nostream *stream, char *nomeprograma){
    mostrardadosPrograma(stream->direita, nomeprograma);
 }
 
+//curriculo do apresentador
+HistStream* adicionarHistorico(HistStream* lista, char* nomeStream, char* inicio, char* termino) {
+    HistStream* novo = (HistStream*) malloc(sizeof(HistStream));
+    strcpy(novo->nomeStream, nomeStream);
+    strcpy(novo->data_inicio, inicio);
+    strcpy(novo->data_termino, termino);
+    novo->prox = NULL;
+    novo->ant = NULL;
+
+    if (lista == NULL) {
+        return novo; 
+    }
+    HistStream* atual = lista;
+    while (atual->prox != NULL) {
+        atual = atual->prox;
+    }
+    atual->prox = novo;
+    novo->ant = atual;
+    return lista;
+}
+
+// lcurriculo do apresentador
+void mostrarCurriculo(ListaApr* apr) {
+    if (apr == NULL) {
+        printf("apresentador inexistente.\n");
+        return;
+    }
+    printf("curriculo de %s:\n", apr->nomeapresent);
+    HistStream* atual = apr->streamhist;
+    if (atual == NULL) {
+        printf("sem historico anterior.\n");
+        return;
+    }
+    while (atual != NULL) {
+        printf(" stream: %s,  inicio: %s termino: %s\n",
+               atual->nomeStream, atual->data_inicio, atual->data_termino);
+        atual = atual->prox;
+    }
+}
+
+
 
 int main(){
    nostream * raizdastream = NULL;
@@ -500,6 +584,7 @@ int main(){
         printf("14. Mostrar dados de um programa:\n");
         printf("15. remover categoria de uma stream:\n");
         printf("16. Alterar stream de um apresentador\n");
+        printf("17. Mostrar curriculo de um apresentador\n");
         printf("0. Sair\n");
         scanf("%d", &op);
         getchar();
@@ -791,6 +876,9 @@ int main(){
         case 16:{
             char nome_apresentador[100];
             char novastream[100];
+            char data_inicio[100];
+            char data_termino[100];
+
             printf("digite o nome do apresentador que deseja alterar a stream: ");
             fgets(nome_apresentador, sizeof(nome_apresentador), stdin);
             nome_apresentador[strcspn(nome_apresentador, "\n")] = 0;
@@ -813,6 +901,17 @@ int main(){
             }
             char streamantiga[100];
             strcpy(streamantiga, apresentador->streamtrabalha);
+
+            printf("digite a data de inicio na stream antiga: ");
+            fgets(data_inicio, sizeof(data_inicio), stdin);
+            data_inicio[strcspn(data_inicio, "\n")] = 0;
+
+            printf("digite a data de termino na stream antiga: ");
+            fgets(data_termino, sizeof(data_termino), stdin);
+            data_termino[strcspn(data_termino, "\n")] = 0;
+            //aqui salva o historico
+            apresentador->streamhist = adicionarHistorico(apresentador->streamhist, streamantiga, data_inicio, data_termino);
+
             printf("digite o nome da nova stream: ");
             fgets(novastream, sizeof(novastream), stdin);
             novastream[strcspn(novastream, "\n")] = 0;
@@ -830,6 +929,30 @@ int main(){
             printf("stream do apresentador alterada com sucesso\n");
             break;
         }
+
+
+        case 17:{
+        char nome_apresentador[100];
+        printf("digite o nome do apresentador: ");
+        fgets(nome_apresentador, sizeof(nome_apresentador), stdin);
+        nome_apresentador[strcspn(nome_apresentador, "\n")] = 0;
+
+        ListaApr* apresentador = NULL;
+        if (listaApresentadores != NULL) {
+            ListaApr* atual = listaApresentadores;
+            do {
+                if (strcmp(atual->nomeapresent, nome_apresentador) == 0) {
+                    apresentador = atual;
+                    break;
+                }
+                atual = atual->prox;
+            } while (atual != listaApresentadores);
+        }
+
+        mostrarCurriculo(apresentador);
+        break;
+    }
+
         case 0:
             printf("Saindo...\n");
             break;
