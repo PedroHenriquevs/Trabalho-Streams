@@ -79,7 +79,70 @@ int fb_stream(nostream*no){
     }
     return alturastream(no->esq) - alturastream(no->direita);
 }
+    //rotacao simples direita
+nostream* rotacaodireita(nostream* raiz){
+    nostream* novaraiz = raiz->esq;
+    raiz->esq = novaraiz->direita;
+    novaraiz->direita = raiz;
 
+    //atualiza alturas
+    raiz->altura = ponto(alturastream(raiz->esq), alturastream(raiz->direita)) + 1;
+    novaraiz->altura = ponto(alturastream(novaraiz->esq), alturastream(novaraiz->direita)) + 1;
+
+    return novaraiz;
+}
+    //rotcao simples esquerda
+nostream* rotacaoesquerda(nostream *raiz){
+    nostream *nova_raiz = raiz->direita;
+    raiz->direita = nova_raiz->esq;
+    nova_raiz->esq = raiz;
+
+    // atualiza as alturas
+    raiz->altura = ponto(alturastream(raiz->esq), alturastream(raiz->direita)) + 1;
+    nova_raiz->altura = ponto(alturastream(nova_raiz->esq), alturastream(nova_raiz->direita)) + 1;
+
+    return nova_raiz;
+}
+
+//rotacao dupla direita
+
+nostream* rotacaodupladireita(nostream* raiz){
+    raiz->esq = rotacaoEsquerda_stream(raiz->esq);
+    return rotacaodireita(raiz);
+}
+
+//rotacao dupla esquerda
+nostream* rotacaoduplaesquerda(nostream* raiz){
+    raiz->direita = rotacaodireita(raiz->direita);
+    return rotacaoEsquerda_stream(raiz);
+}
+
+nostream*balancearstream(nostream*raiz){
+    int fb = fb_stream(raiz);
+
+     if(fb > 1){
+        if(fb_stream(raiz->esq) >= 0){
+            //rotacao simples direita
+            return rotacaodireita(raiz);
+     }else{
+            //rotacao dupla direita
+            return rotacaodupladireita(raiz);
+        }
+    }
+
+
+    if(fb < -1){
+        if(fb_stream(raiz->direita) <= 0){
+            //rotacao simples esquerda
+            return rotacaoesquerda(raiz);
+        }else{
+            //rotacao dupla esquerda
+            return rotacaoduplaesquerda(raiz);
+        }
+    }
+    return raiz;
+
+}
 
 
 ListaCat *criarcategoria(){
@@ -97,6 +160,7 @@ nostream *criarstream(char *nome, char *site){
     novo-> esq= NULL;
     novo -> direita = NULL;
     novo->cat = criarcategoria();
+    novo->altura = 0;
     return novo;
 }
 
@@ -110,7 +174,7 @@ nostream *inserirstream(nostream *raiz, char *nome, char *site){
     }else if(cmp > 0){
         raiz -> direita = inserirstream( raiz -> direita, nome, site);
     }else{
-        printf("Stream * %s * ja existente na base de dados.\n", nome);
+        printf("stream *%s* ja existente na base de dados.\n", nome);
     }
     return raiz;
 }
@@ -489,7 +553,7 @@ int main(){
             printf("Digite o site da stream:\n");
             fgets(site, sizeof(site), stdin);
             site[strcspn(site, "\n")] = 0;
-            raizdastream = inserirstream(raizdastream, nome, site);
+            raizdastream = inserirstreamAvl(raizdastream, nome, site);
             break;
         }
         case 2:{
