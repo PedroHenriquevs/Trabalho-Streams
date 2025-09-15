@@ -426,7 +426,8 @@ void MostrarDiasSemana(ArvProg *programa) {
 
 ArvProg *inserirProgramaAVL(ArvProg **raiz, char *nome, char *periodo, char *hora, bool vivo, char *apresentador){
     if(*raiz == NULL){
-      return criarprograma(nome, periodo, hora, vivo, apresentador);
+        *raiz = criarprograma(nome, periodo, hora, vivo, apresentador);
+      return *raiz;
     }
 
     int cmp = strcmp(nome, (*raiz)->nomeProg);
@@ -478,6 +479,14 @@ void mostrarprog_por_filtro(ArvProg*raiz, char *dia, char *hora, char* nome_cate
         atual = atual->prox;
     }
     mostrarprog_por_filtro(raiz->dir, dia, hora, nome_categoria);
+}
+
+ArvProg* buscarPrograma(ArvProg *raiz, char *nome) {
+    if (raiz == NULL) return NULL;
+    int cmp = strcmp(nome, raiz->nomeProg);
+    if (cmp == 0) return raiz;
+    if (cmp < 0) return buscarPrograma(raiz->esq, nome);
+    return buscarPrograma(raiz->dir, nome);
 }
 
 
@@ -924,10 +933,16 @@ int main(){
             if (apresentador_existente == NULL) {
                 printf("apresentador '%s' nao cadastrado.\n", apresentador);
             } else {
-                inserirProgramaAVL(&categoriaencontrada->prog, nomeProg, periodo, hora, ao_vivo_status, apresentador);
+                categoriaencontrada->prog = inserirProgramaAVL(&categoriaencontrada->prog,nomeProg, periodo, hora, ao_vivo_status, apresentador);
+                ArvProg *prog_inserido = buscarPrograma(categoriaencontrada->prog, nomeProg);
+                if (prog_inserido != NULL) {
+                    adicionaDiadasemana(prog_inserido);
+                    printf("programa cadastrado com sucesso\n");
+                } else {
+                    printf("Erro: nao foi possivel localizar o programa apos insercao\n");
+                }
+
                 
-                adicionaDiadasemana(categoriaencontrada->prog);
-                printf("programa cadastrado com sucesso\n");
             }
             break;
         }
