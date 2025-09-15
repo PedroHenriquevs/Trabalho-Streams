@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "time.h"
 
 typedef struct ArvProg{
     char nomeProg[100];
@@ -9,15 +10,21 @@ typedef struct ArvProg{
     char hora_inicio[100];
     bool ao_vivo;
     char nome_apresent[100];
+    struct DiaSemana *dias;
     struct ArvProg *esq;
     struct ArvProg *dir;
     int altura;
 }ArvProg;
 
+typedef struct DiaSemana{
+    char dia[9];
+    struct DiaSemana *prox;
+
+}DiaSemana;
+
 typedef struct ListaCat{
     char tipo[100];
     char nomecat[100];
-    struct ListaCat *ant;
     struct ListaCat *prox;
     struct ArvProg *prog;
 }ListaCat;
@@ -257,43 +264,6 @@ void mostrarstream(nostream*raiz){
         mostrarstream(raiz->direita);
     }
 }
-
-ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria){
-    ListaCat *novo = (ListaCat *) malloc(sizeof(ListaCat));
-    strcpy(novo->tipo, tipocat);
-    strcpy(novo->nomecat, nomecategoria);
-    novo->prog = NULL;
-    if(lista == NULL){
-        novo->prox = novo;
-        novo->ant = novo;
-        printf("Categoria adicionada com sucesso!\n");
-        return novo;
-    }
-    ListaCat *atual = lista;
-    do{
-        if(strcmp(novo->nomecat, atual->nomecat) == 0){
-            printf("Erro: Categoria '%s' ja existe.\n", novo->nomecat);
-            free(novo);
-            return lista;
-        }
-        if(strcmp(novo->nomecat, atual->nomecat) < 0){
-            break;
-        }
-        atual = atual->prox;
-    }while(atual != lista);
-    ListaCat *anterior = atual->ant;
-    novo->prox = atual;
-    novo->ant = anterior;
-    anterior->prox = novo;
-    atual->ant = novo;
-    printf("Categoria adicionada com sucesso!\n");
-    if(strcmp(novo->nomecat, lista->nomecat) < 0){
-        return novo;
-    }else{
-        return lista;
-    }
-}
-
 nostream *BuscaStream(nostream *arvstream, char *nome){
     if(arvstream == NULL || strcmp(nome, arvstream->nome) == 0){
         return arvstream;
@@ -304,6 +274,59 @@ nostream *BuscaStream(nostream *arvstream, char *nome){
         return BuscaStream(arvstream->direita, nome);
     }
 }
+
+ListaCat *adicionarcategoria(ListaCat *lista, char *tipocat, char *nomecategoria){
+    ListaCat *novo = (ListaCat *) malloc(sizeof(ListaCat));
+    strcpy(novo->tipo, tipocat);
+    strcpy(novo->nomecat, nomecategoria);
+    novo->prog = NULL;
+    ListaCat *anterior = NULL;
+
+    if(lista == NULL){
+        novo->prox = novo;
+        printf("Categoria adicionada com sucesso!\n");
+        return novo;
+    }
+    ListaCat *atual = lista;
+    do{
+        if(strcmp(novo->nomecat, atual->nomecat) == 0){
+            printf("Erro: Categoria '%s' ja existe.\n", novo->nomecat);
+            free(novo);
+            return lista;
+        }  
+    
+        if(strcmp(novo->nomecat, atual->nomecat) < 0){
+            break;
+        }
+        anterior = atual;
+        atual = atual->prox;
+
+    }while(atual != lista);
+
+    if(anterior == NULL){
+        ListaCat *ultimo = lista;
+        while(ultimo->prox != lista){
+            ultimo = ultimo->prox;
+        }
+        novo->prox = lista;
+        ultimo->prox = novo;
+        return novo;
+    }
+
+    if(atual != lista){
+        anterior->prox = novo;
+        novo->prox = atual;
+        printf("Categoria adicionada: %s\n", novo->nomecat);
+        return lista;
+    }
+
+    
+    anterior->prox = novo;
+    novo->prox = lista;
+    printf("Categoria adicionada: %s\n", novo->nomecat);
+    return lista;
+}
+
 
 ListaCat *buscarcategoria(ListaCat *lista, char *nomecat){
     if(lista == NULL){
@@ -355,30 +378,74 @@ ArvProg *criarprograma(char *nome, char *periodo, char *hora, bool vivo, char *a
     novo->esq = NULL;
     novo->dir = NULL;
     novo->altura = 0; 
+    novo->dias = NULL;
     return novo;
 }
 
-ArvProg* inserirProgramaAVL(ArvProg *raiz, char *nome, char *periodo, char *hora, bool vivo, char *apresentador){
-    if(raiz == NULL){
-      return criarprograma(nome, periodo, hora, vivo, apresentador);
+DiaSemana *adicionaDiadasemana(ArvProg *programa) {
+    int numDias;
+    printf("Quantos dias da semana o programa sera exibido? ");
+    scanf("%d", &numDias);
+    getchar(); 
+
+    printf("Digite os dias da semana (ex: Segunda, Terca, ...):\n");
+
+    for (int i = 0; i < numDias; i++) {
+        DiaSemana *novo = (DiaSemana *) malloc(sizeof(DiaSemana));
+        if (novo == NULL) {
+            printf("Erro ao alocar memoria para o dia da semana.\n");
+            return programa->dias; // retorna o que já foi adicionado
+        }
+
+        printf("Dia %d: ", i + 1);
+        fgets(novo->dia, sizeof(novo->dia), stdin);
+        novo->dia[strcspn(novo->dia, "\n")] = '\0'; // remover \n
+        
+        
+        // insere no início da lista
+        novo->prox = programa->dias;
+        programa->dias = novo;
     }
 
-    int cmp = strcmp(nome, raiz->nomeProg);
+    return programa->dias;
+}
+
+void MostrarDiasSemana(ArvProg *programa) {
+    if (programa == NULL || programa->dias == NULL) {
+        printf("Nenhum dia da semana cadastrado para este programa.\n");
+        return;
+    }
+
+    printf("Dias da semana em que o programa '%s' sera exibido:\n", programa->nomeProg);
+    DiaSemana *atual = programa->dias;
+    while (atual != NULL) {
+        printf("- %s\n", atual->dia);
+        atual = atual->prox;
+    }
+}
+
+
+ArvProg *inserirProgramaAVL(ArvProg **raiz, char *nome, char *periodo, char *hora, bool vivo, char *apresentador){
+    if(*raiz == NULL){
+        *raiz = criarprograma(nome, periodo, hora, vivo, apresentador);
+      return *raiz;
+    }
+
+    int cmp = strcmp(nome, (*raiz)->nomeProg);
     if(cmp < 0){
-        raiz->esq = inserirProgramaAVL(raiz->esq, nome, periodo, hora, vivo, apresentador);
+        (*raiz)->esq = inserirProgramaAVL(&(*raiz)->esq, nome, periodo, hora, vivo, apresentador);
     }else if(cmp > 0){
-        raiz->dir = inserirProgramaAVL(raiz->dir, nome, periodo, hora, vivo, apresentador);
+        (*raiz)->dir = inserirProgramaAVL(&(*raiz)->dir, nome, periodo, hora, vivo, apresentador);
     }else{
         printf("Programa '%s' ja cadastrado nesta categoria\n", nome);
-        return raiz;
+        return *raiz;
     }
-
     //atualiza altura
-    raiz->altura = ponto(altura(raiz->esq), altura(raiz->dir)) + 1;
+    (*raiz)->altura = ponto(altura((*raiz)->esq), altura((*raiz)->dir)) + 1;
     //balanceia a arvore
-    raiz = balancearprog(raiz);
+    *raiz = balancearprog(*raiz);
 
-    return raiz;
+    return *raiz;
 }
 
 void mostrarProgramas(ArvProg *raiz){
@@ -387,6 +454,7 @@ void mostrarProgramas(ArvProg *raiz){
         printf("Programa: %s\n", raiz->nomeProg);
         printf("Periodo: %s\n", raiz->periodo);
         printf("Horario: %s\n", raiz->hora_inicio);
+        MostrarDiasSemana(raiz);
         printf("Apresentador: %s\n", raiz->nome_apresent);
         printf("Ao Vivo: %s\n", raiz->ao_vivo ? "Sim" : "Nao");
         printf("-----------------------\n");
@@ -395,17 +463,35 @@ void mostrarProgramas(ArvProg *raiz){
 }
 
 void mostrarprog_por_filtro(ArvProg*raiz, char *dia, char *hora, char* nome_categoria){
-      if(raiz == NULL){
+    if(raiz == NULL){
         return;
-      }
-      mostrarprog_por_filtro(raiz->esq, dia, hora, nome_categoria);
-      if(strcmp(raiz->periodo, dia)== 0 && strcmp(raiz->hora_inicio, hora) == 0){
-        printf("  - Programa: %s (Categoria: %s)\n", raiz->nomeProg, nome_categoria);
-      }
+    }
+
+    mostrarprog_por_filtro(raiz->esq, dia, hora, nome_categoria);
+    DiaSemana *atual = raiz->dias;
+    while (atual != NULL) {
+        if (strcmp(atual->dia, dia) == 0 && strcmp(raiz->hora_inicio, hora) == 0) {
+            printf("  - Programa: %s\n", raiz->nomeProg);
+            printf("    Categoria: %s\n", nome_categoria);
+            printf("    Hora: %s\n", raiz->hora_inicio);
+            printf("    Apresentador: %s\n", raiz->nome_apresent);
+            printf("    Ao Vivo: %s\n", raiz->ao_vivo ? "Sim" : "Nao");
+        }
+        atual = atual->prox;
+    }
     mostrarprog_por_filtro(raiz->dir, dia, hora, nome_categoria);
 }
 
-void buscarProgramasNaStream(nostream* streambuscada, char *dia, char *hora){
+ArvProg* buscarPrograma(ArvProg *raiz, char *nome) {
+    if (raiz == NULL) return NULL;
+    int cmp = strcmp(nome, raiz->nomeProg);
+    if (cmp == 0) return raiz;
+    if (cmp < 0) return buscarPrograma(raiz->esq, nome);
+    return buscarPrograma(raiz->dir, nome);
+}
+
+
+void buscarProgramasNaStream(nostream *streambuscada, char *dia, char *hora){
     if(streambuscada == NULL){
         printf("Stream nao encontrada.\n");
         return;
@@ -426,8 +512,18 @@ void mostrarprogpordia(ArvProg *raiz, char *dia){
         return;
     }
     mostrarprogpordia(raiz->esq, dia);
-    if(strcmp(raiz->periodo, dia) == 0){
-        printf("pograma: %s \nhora: %s - apresentador:%s\n", raiz->nomeProg, raiz->hora_inicio, raiz->nome_apresent);
+    DiaSemana *atual = raiz->dias;
+    while (atual != NULL) {
+        if (strcmp(atual->dia, dia) == 0) {
+            printf("  - Programa: %s\n", raiz->nomeProg);
+            printf("    Hora: %s\n", raiz->hora_inicio);
+            printf("    Apresentador: %s\n", raiz->nome_apresent);
+            printf("    Ao Vivo: %s\n", raiz->ao_vivo ? "Sim" : "Nao");
+            printf("    Periodo: %s\n", raiz->periodo);
+            printf("    Dias da Semana:\n");
+            MostrarDiasSemana(raiz);
+        }
+        atual = atual->prox;
     }
     mostrarprogpordia(raiz->dir, dia);
 }
@@ -540,33 +636,60 @@ void mostrarApresentadorporCategoria(ListaApr *apresentadores, char *categoria){
 
 ListaCat *removercategoria(ListaCat *lista, char *nome){
     if(lista == NULL){
-        printf("nao existe categoria para remover\n");
+        printf("Nao existe categoria para remover\n");
         return NULL;
     }
-    ListaCat *noremove = buscarcategoria(lista, nome);
-    if(noremove == NULL){
-        printf("categoria nao encontrada\n");
+
+    ListaCat *atual = lista;
+    ListaCat *anterior = NULL;
+
+    // procurar a categoria
+    do {
+        if(strcmp(atual->nomecat, nome) == 0){
+            break;
+        }
+        anterior = atual;
+        atual = atual->prox;
+    } while(atual != lista);
+
+    // nao encontrou
+    if(strcmp(atual->nomecat, nome) != 0){
+        printf("Categoria nao encontrada\n");
         return lista;
     }
-    //verifica se tem programa casdastrado
-    if(noremove->prog !=NULL){
-        printf("nao eh possivel remover categoria com programa cadastrado\n");
+
+    // verificar se tem programa cadastrado
+    if(atual->prog != NULL){
+        printf("Nao eh possivel remover categoria com programa cadastrado\n");
         return lista;
     }
-    //caso o no seja unico na lista
-    if(noremove->prox == noremove){
-        free(noremove);
-        printf("categoria removida\n");
+
+    // caso unico no na lista
+    if(atual->prox == atual){
+        free(atual);
+        printf("Categoria removida (lista ficou vazia)\n");
         return NULL;
     }
-    //reorganizando os ponteiros
-    noremove->ant->prox = noremove->prox;
-    noremove->prox->ant = noremove->ant;
-    // novo inicio da lista
-    ListaCat* novoincio = (noremove == lista) ? noremove->prox : lista;
-    free(noremove);
-    printf("categoria removida\n");
-    return novoincio;
+
+    // caso seja o primeiro (cabeça da lista)
+    if(atual == lista){
+        // achar o ultimo pra manter circularidade
+        ListaCat *ultimo = lista;
+        while(ultimo->prox != lista){
+            ultimo = ultimo->prox;
+        }
+        lista = atual->prox;   // novo inicio
+        ultimo->prox = lista;  // ultimo aponta pro novo inicio
+        free(atual);
+        printf("Categoria removida (era a primeira)\n");
+        return lista;
+    }
+
+    // caso meio ou fim
+    anterior->prox = atual->prox;
+    free(atual);
+    printf("Categoria removida\n");
+    return lista;
 }
 
 int buscarprog_por_apresentador(ArvProg*raiz, char* nome_apresent){
@@ -664,6 +787,65 @@ void mostrarCurriculo(ListaApr* apresentador){
     }
 }
 
+// mediçao do tempo de inserção de N programas em uma categoria
+void medirTempoInsercao(ListaCat *cat, int qtd) {
+    clock_t inicio, fim;
+    double tempo_gasto;
+
+    inicio = clock();
+    for (int i = 0; i < qtd; i++) {
+        char nomeProg[100], hora[100], apresent[100];
+
+        // aqui você coleta os dados do programa
+        printf("Nome do programa %d: ", i + 1);
+        fgets(nomeProg, sizeof(nomeProg), stdin);
+        nomeProg[strcspn(nomeProg, "\n")] = 0;
+
+        printf("Hora de inicio: ");
+        fgets(hora, sizeof(hora), stdin);
+        hora[strcspn(hora, "\n")] = 0;
+
+        printf("Nome do apresentador: ");
+        fgets(apresent, sizeof(apresent), stdin);
+        apresent[strcspn(apresent, "\n")] = 0;
+
+        // insere na árvore AVL de programas da categoria
+        cat->prog = inserirPrograma(cat->prog, nomeProg, hora, apresent, true);
+    }
+    fim = clock();
+
+    tempo_gasto = ((double)(fim - inicio)) / CLOCKS_PER_SEC;
+    printf("\nTempo de insercao de %d programas: %f segundos\n", qtd, tempo_gasto);
+}
+
+//Medição do tempo de busca de programas em uma categoria (30 repetições)
+void medirTempoBusca(ListaCat *cat) {
+    clock_t inicio, fim;
+    double soma = 0.0;
+
+    for (int i = 0; i < 30; i++) {
+        inicio = clock();
+
+        // percorre a arvore de programas (sem prints para não atrapalhar a medição)
+        percorrerProgramas(cat->prog);
+
+        fim = clock();
+        soma += ((double)(fim - inicio)) / CLOCKS_PER_SEC;
+    }
+
+    printf("\nTempo medio de busca em categoria (30 execucoes): %f segundos\n", soma / 30.0);
+}
+
+void percorrerProgramas(ArvProg *raiz) {
+    if (raiz == NULL) return;
+    percorrerProgramas(raiz->esq);
+    // nada de printf aqui
+    percorrerProgramas(raiz->dir);
+}
+
+
+
+
 
 int main(){
    nostream * raizdastream = NULL;
@@ -758,7 +940,6 @@ int main(){
             break;
         }
        case 5:{
-            {
             char nome_stream_prog[100];
             char nome_categoria_prog[100];
             printf("Digite o nome da stream para adicionar o programa: ");
@@ -796,7 +977,7 @@ int main(){
             scanf("%d", &vivo_op);
             getchar();
             ao_vivo_status = (vivo_op == 1);
-
+            // Verifica se o apresentador existe na lista de apresentadores
             ListaApr *apresentador_existente = NULL;
             if (listaApresentadores != NULL) {
                 ListaApr *atual_apr = listaApresentadores;
@@ -812,10 +993,16 @@ int main(){
             if (apresentador_existente == NULL) {
                 printf("apresentador '%s' nao cadastrado.\n", apresentador);
             } else {
-                //avl da categoria
-                categoriaencontrada->prog = inserirProgramaAVL(categoriaencontrada->prog, nomeProg, periodo, hora, ao_vivo_status, apresentador);
-                printf("Programa '%s' adicionado na categoria '%s' da stream '%s'.\n", nomeProg, nome_categoria_prog, nome_stream_prog);
-            }
+                categoriaencontrada->prog = inserirProgramaAVL(&categoriaencontrada->prog,nomeProg, periodo, hora, ao_vivo_status, apresentador);
+                ArvProg *prog_inserido = buscarPrograma(categoriaencontrada->prog, nomeProg);
+                if (prog_inserido != NULL) {
+                    adicionaDiadasemana(prog_inserido);
+                    printf("programa cadastrado com sucesso\n");
+                } else {
+                    printf("Erro: nao foi possivel localizar o programa apos insercao\n");
+                }
+
+                
             }
             break;
         }
@@ -1025,6 +1212,43 @@ int main(){
             }
             break;
         }
+
+        case 18: {
+        char nomeCat[100];
+        printf("Digite o nome da categoria: ");
+        scanf(" %[^\n]", nomeCat);
+
+        ListaCat *cat = buscarCat(ListaCat, nomeCat);
+        if (cat == NULL) {
+            printf("Categoria nao encontrada!\n");
+        } else {
+            int qtd;
+            printf("Quantos programas deseja inserir? ");
+            scanf("%d", &qtd);
+            getchar(); // limpar enter
+            medirTempoInsercao(cat, qtd);
+        }
+        break;
+    }
+
+     case 19: {
+        char nomeCat[100];
+        printf("Digite o nome da categoria: ");
+        scanf(" %[^\n]", nomeCat);
+
+        ListaCat *cat = buscarCat(ListaCat, nomeCat);
+        if (cat == NULL) {
+            printf("Categoria nao encontrada!\n");
+        } else {
+            medirTempoBusca(cat);
+        }
+        break;
+    }
+
+    default:
+        printf("Opcao invalida!\n");
+}
+
         case 0:{
             printf("Saindo...\n");
             break;

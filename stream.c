@@ -9,9 +9,16 @@ typedef struct ArvProg{
     char hora_inicio[100];
     bool ao_vivo;
     char nome_apresent[100];
+    struct DiaSemana *dias;
     struct ArvProg *esq;
     struct ArvProg *dir;
 }ArvProg;
+
+typedef struct DiaSemana{
+    char dia[9];
+    struct DiaSemana *prox;
+
+}DiaSemana;
 
 typedef struct ListaCat{
     char tipo[100];
@@ -65,7 +72,7 @@ nostream *criarstream(char *nome, char *site){
 
 nostream *inserirstream(nostream *raiz, char *nome, char *site){
     if(raiz == NULL){
-         return criarstream(nome, site);
+        return criarstream(nome, site);
     }
     int cmp = strcmp(nome, raiz -> nome);
     if(cmp < 0){
@@ -201,6 +208,7 @@ ArvProg *criarprograma(char *nome, char *periodo, char *hora, bool vivo, char *a
     strcpy(novo->nome_apresent, apresentador);
     novo->esq = NULL;
     novo->dir = NULL;
+    novo->dias = NULL;
     return novo;
 }
 
@@ -220,6 +228,47 @@ void inserirprograma(ArvProg **raiz, char *nome, char *periodo, char *hora, bool
     }
 }
 
+void MostrarDiasSemana(ArvProg *programa) {
+    if (programa == NULL || programa->dias == NULL) {
+        printf("Nenhum dia da semana cadastrado para este programa.\n");
+        return;
+    }
+
+    printf("Dias da semana em que o programa '%s' sera exibido:\n", programa->nomeProg);
+    DiaSemana *atual = programa->dias;
+    while (atual != NULL) {
+        printf("- %s\n", atual->dia);
+        atual = atual->prox;
+    }
+}
+
+DiaSemana *adicionaDiadasemana(ArvProg *programa) {
+    int numDias;
+    printf("Quantos dias da semana o programa sera exibido? ");
+    scanf("%d", &numDias);
+    getchar(); 
+
+    printf("Digite os dias da semana (ex: Segunda, Terca, ...):\n");
+
+    for (int i = 0; i < numDias; i++) {
+        DiaSemana *novo = (DiaSemana *) malloc(sizeof(DiaSemana));
+        if (novo == NULL) {
+            printf("Erro ao alocar memoria para o dia da semana.\n");
+            return programa->dias; // retorna o que já foi adicionado
+        }
+
+        printf("Dia %d: ", i + 1);
+        fgets(novo->dia, sizeof(novo->dia), stdin);
+        novo->dia[strcspn(novo->dia, "\n")] = '\0'; // remover \n
+
+        // insere no início da lista
+        novo->prox = programa->dias;
+        programa->dias = novo;
+    }
+
+    return programa->dias;
+}
+
 void mostrarProgramas(ArvProg *raiz){
     if(raiz != NULL){
         mostrarProgramas(raiz->esq);
@@ -227,23 +276,34 @@ void mostrarProgramas(ArvProg *raiz){
         printf("Periodo: %s\n", raiz->periodo);
         printf("Horario: %s\n", raiz->hora_inicio);
         printf("Apresentador: %s\n", raiz->nome_apresent);
+        printf("Dias da Semana:\n");
+        MostrarDiasSemana(raiz);
         printf("Ao Vivo: %s\n", raiz->ao_vivo ? "Sim" : "Nao");
         mostrarProgramas(raiz->dir);
     }
 }
 
 void mostrarprog_por_filtro(ArvProg*raiz, char *dia, char *hora, char* nome_categoria){
-      if(raiz == NULL){
+    if(raiz == NULL){
         return;
-      }
-      mostrarprog_por_filtro(raiz->esq, dia, hora, nome_categoria);
-      if(strcmp(raiz->periodo, dia)== 0 && strcmp(raiz->hora_inicio, hora) == 0){
-        printf("  - Programa: %s (Categoria: %s)\n", raiz->nomeProg, nome_categoria);
-      }
+    }
+
+    mostrarprog_por_filtro(raiz->esq, dia, hora, nome_categoria);
+    DiaSemana *atual = raiz->dias;
+    while (atual != NULL) {
+        if (strcmp(atual->dia, dia) == 0 && strcmp(raiz->hora_inicio, hora) == 0) {
+            printf("  - Programa: %s\n", raiz->nomeProg);
+            printf("    Categoria: %s\n", nome_categoria);
+            printf("    Hora: %s\n", raiz->hora_inicio);
+            printf("    Apresentador: %s\n", raiz->nome_apresent);
+            printf("    Ao Vivo: %s\n", raiz->ao_vivo ? "Sim" : "Nao");
+        }
+        atual = atual->prox;
+    }
     mostrarprog_por_filtro(raiz->dir, dia, hora, nome_categoria);
 }
 
-void buscarProgramasNaStream(nostream* streambuscada, char *dia, char *hora){
+void buscarProgramasNaStream(nostream *streambuscada, char *dia, char *hora){
     if(streambuscada == NULL){
         printf("Stream nao encontrada.\n");
         return;
@@ -264,8 +324,18 @@ void mostrarprogpordia(ArvProg *raiz, char *dia){
         return;
     }
     mostrarprogpordia(raiz->esq, dia);
-    if(strcmp(raiz->periodo, dia) == 0){
-        printf("pograma: %s (hora: %s - apresentador:%s)\n", raiz->nomeProg, raiz->hora_inicio, raiz->nome_apresent);
+    DiaSemana *atual = raiz->dias;
+    while (atual != NULL) {
+        if (strcmp(atual->dia, dia) == 0) {
+            printf("  - Programa: %s\n", raiz->nomeProg);
+            printf("    Hora: %s\n", raiz->hora_inicio);
+            printf("    Apresentador: %s\n", raiz->nome_apresent);
+            printf("    Ao Vivo: %s\n", raiz->ao_vivo ? "Sim" : "Nao");
+            printf("    Periodo: %s\n", raiz->periodo);
+            printf("    Dias da Semana:\n");
+            MostrarDiasSemana(raiz);
+        }
+        atual = atual->prox;
     }
     mostrarprogpordia(raiz->dir, dia);
 }
@@ -498,6 +568,7 @@ void mostrardadosPrograma(nostream *stream, char *nomeprograma){
                         printf("Programa: %s\n", prog_atual->nomeProg);
                         printf("Periodo: %s\n", prog_atual->periodo);
                         printf("Horario: %s\n", prog_atual->hora_inicio);
+                        MostrarDiasSemana(prog_atual);
                         printf("Apresentador: %s\n", prog_atual->nome_apresent);
                         printf("Ao Vivo: %s\n", prog_atual->ao_vivo ? "Sim" : "Nao");
                         encontrou = 1;
@@ -556,7 +627,6 @@ void mostrarCurriculo(ListaApr* apresentador){
         atual = atual->prox;
     }
 }
-
 
 
 int main(){
@@ -708,6 +778,7 @@ int main(){
                 printf("apresentador '%s' nao cadastrado.\n", apresentador);
             } else {
                 inserirprograma(&categoriaencontrada->prog, nomeProg, periodo, hora, ao_vivo_status, apresentador);
+                adicionaDiadasemana(categoriaencontrada->prog);
                 printf("programa cadastrado com sucesso\n");
             }
             break;
@@ -909,7 +980,7 @@ int main(){
             fgets(data_termino, sizeof(data_termino), stdin);
             data_termino[strcspn(data_termino, "\n")] = 0;
             //aqui salva o historico
-            apresentador->streamhist = adicionarHistorico(apresentador->streamhist, streamantiga, data_inicio, data_termino);
+            
 
             printf("digite o nome da nova stream: ");
             fgets(novastream, sizeof(novastream), stdin);
@@ -925,6 +996,7 @@ int main(){
                 break;
             }
             strcpy(apresentador->streamtrabalha, novastream);
+            apresentador->streamhist = adicionarHistorico(apresentador->streamhist, streamantiga, data_inicio, data_termino);
             printf("stream do apresentador alterada com sucesso\n");
             break;
         }
