@@ -612,21 +612,65 @@ HistStream* adicionarHistorico(HistStream* lista, char* streamAntiga, char* inic
 // lcurriculo do apresentador
 void mostrarCurriculo(ListaApr* apresentador){
     if (apresentador == NULL) {
-        printf("apresentador inexistente.\n");
+        printf("Apresentador inexistente.\n");
         return;
     }
-    printf("curriculo de %s:\n", apresentador->nomeapresent);
+    printf("\n--- Curriculo de %s ---\n", apresentador->nomeapresent);
+
+    // exibe a stream atual
+    printf("Stream Atual: %s\n", apresentador->streamtrabalha);
+
+    // exibe o histórico de streams
     HistStream* atual = apresentador->streamhist;
     if(atual == NULL){
-        printf("sem historico anterior.\n");
+        printf("Nenhum historico de streams anteriores.\n");
+    } else {
+        printf("Historico de Streams:\n");
+        while(atual != NULL){
+            printf("  - Stream: %s | Periodo: %s a %s\n",
+                   atual->nomeStream, atual->data_inicio, atual->data_termino);
+            atual = atual->prox;
+        }
+    }
+    
+}
+
+void removerApresentadorDePrograma(ArvProg* raiz, const char* nomeApresentador) {
+    if (raiz == NULL) {
         return;
     }
-    while(atual != NULL){
-        printf(" stream: %s,  inicio: %s termino: %s\n",
-               atual->nomeStream, atual->data_inicio, atual->data_termino);
-        atual = atual->prox;
+
+    //percorre a arvore de programas
+    removerApresentadorDePrograma(raiz->esq, nomeApresentador);
+
+    if (strcmp(raiz->nome_apresent, nomeApresentador) == 0) {
+        strcpy(raiz->nome_apresent, "sem apresentador"); 
     }
+
+    removerApresentadorDePrograma(raiz->dir, nomeApresentador);
 }
+
+// desvincula o apresentador de todos os programas
+void desvincularApresentador(nostream* raizdastream, const char* nomeApresentador) {
+    if (raizdastream == NULL) {
+        return;
+    }
+
+    //prcorre a árvore de streams
+    desvincularApresentador(raizdastream->esq, nomeApresentador);
+
+    //percorre as categorias da stream atual
+    ListaCat* currentCat = raizdastream->cat;
+    if (currentCat != NULL) {
+        do {
+            removerApresentadorDePrograma(currentCat->prog, nomeApresentador);
+            currentCat = currentCat->prox;
+        } while (currentCat != raizdastream->cat);
+    }
+
+    desvincularApresentador(raizdastream->direita, nomeApresentador);
+}
+
 
 
 int main(){
@@ -943,66 +987,60 @@ int main(){
             streamencontrada->cat = removercategoria(streamencontrada->cat, nomecategoria_remove);
             break;
         }
-        case 16:{
-            char nome_apresentador[100];
-            char novastream[100];
-            char data_inicio[100];
-            char data_termino[100];
+             case 16:{
+            printf("Digite o nome do apresentador: ");
+            char nome_ap[100], nova_stream[100], data_inicio[100], data_fim[100];
+            fgets(nome_ap, sizeof(nome_ap), stdin);
+            nome_ap[strcspn(nome_ap, "\n")] = 0;
 
-            printf("digite o nome do apresentador que deseja alterar a stream: ");
-            fgets(nome_apresentador, sizeof(nome_apresentador), stdin);
-            nome_apresentador[strcspn(nome_apresentador, "\n")] = 0;
-            
-            ListaApr* apresentador = NULL;
-            if (listaApresentadores != NULL) {
-                ListaApr* atual = listaApresentadores;
-                do {
-                    if (strcmp(atual->nomeapresent, nome_apresentador) == 0) {
-                        apresentador = atual;
-                        break;
-                    }
-                    atual = atual->prox;
-                } while (atual != listaApresentadores);
-            }
-
-            if(apresentador == NULL){
-                printf("apresentador nao encontrado\n");
+            // procura o apresentador
+            if(listaApresentadores == NULL){
+                printf("Nenhum apresentador cadastrado.\n");
                 break;
             }
-            char streamantiga[100];
-            strcpy(streamantiga, apresentador->streamtrabalha);
+            ListaApr* atual = listaApresentadores;
+            ListaApr* encontrado = NULL;
+            do{
+                if(strcmp(atual->nomeapresent, nome_ap) == 0){
+                    encontrado = atual;
+                    break;
+                }
+                atual = atual->prox;
+            }while(atual != listaApresentadores);
 
-            printf("digite a data de inicio na stream antiga: ");
+            if(encontrado == NULL){
+                printf("Apresentador nao encontrado.\n");
+                break;
+            }
+
+            printf("Digite a nova stream: ");
+            fgets(nova_stream, sizeof(nova_stream), stdin);
+            nova_stream[strcspn(nova_stream, "\n")] = 0;
+            if(BuscaStream(raizdastream, nova_stream) == NULL){
+                printf("Stream '%s' nao existe.\n", nova_stream);
+                break;
+            }
+            
+            printf("Digite data de inicio: ");
             fgets(data_inicio, sizeof(data_inicio), stdin);
             data_inicio[strcspn(data_inicio, "\n")] = 0;
+            printf("Digite data de termino: ");
+            fgets(data_fim, sizeof(data_fim), stdin);
+            data_fim[strcspn(data_fim, "\n")] = 0;
 
-            printf("digite a data de termino na stream antiga: ");
-            fgets(data_termino, sizeof(data_termino), stdin);
-            data_termino[strcspn(data_termino, "\n")] = 0;
-            //aqui salva o historico
             
+            // desvincula o apresentador de todos os programas anteriores
+            desvincularApresentador(raizdastream, encontrado->nomeapresent);
 
-            printf("digite o nome da nova stream: ");
-            fgets(novastream, sizeof(novastream), stdin);
-            novastream[strcspn(novastream, "\n")] = 0;
-            nostream* nova_stream = BuscaStream(raizdastream, novastream);
-            if(nova_stream == NULL){
-                printf("stream nao encontrada\n");
-                break;
-            }
-            nostream* stream_antiga = BuscaStream(raizdastream, streamantiga);
-            if(apresentador_prog_stream(stream_antiga, nome_apresentador)){
-                printf("apresentador possui programas na stream atual\n");
-                break;
-            }
-            strcpy(apresentador->streamtrabalha, novastream);
-            apresentador->streamhist = adicionarHistorico(apresentador->streamhist, streamantiga, data_inicio, data_termino);
-            printf("stream do apresentador alterada com sucesso\n");
+            // adiciona a stream antiga ao historico
+            encontrado->streamhist = adicionarHistorico(encontrado->streamhist, encontrado->streamtrabalha, data_inicio, data_fim);
+            
+            // altera para a nova stream
+            strcpy(encontrado->streamtrabalha, nova_stream);
+            printf("Alteracao realizada: %s agora trabalha em %s\n", encontrado->nomeapresent, encontrado->streamtrabalha);
             break;
         }
-
-
-        case 17:{
+         case 17:{
         char nome_apresentador[100];
         printf("digite o nome do apresentador: ");
         fgets(nome_apresentador, sizeof(nome_apresentador), stdin);

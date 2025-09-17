@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "time.h"
 
 typedef struct ArvProg{
     char nomeProg[100];
@@ -771,80 +770,63 @@ HistStream* adicionarHistorico(HistStream* lista, char* streamAntiga, char* inic
 
 void mostrarCurriculo(ListaApr* apresentador){
     if (apresentador == NULL) {
-        printf("apresentador inexistente.\n");
+        printf("Apresentador inexistente.\n");
         return;
     }
-    printf("curriculo de %s:\n", apresentador->nomeapresent);
+   printf("\n--- Curriculo de %s ---\n", apresentador->nomeapresent);
+
+    // exibir a stream atual
+    printf("  Stream Atual: %s\n", apresentador->streamtrabalha);
+
     HistStream* atual = apresentador->streamhist;
     if(atual == NULL){
-        printf("sem historico anterior.\n");
+        printf("  Sem historico anterior.\n");
         return;
     }
+    printf("  Historico de Streams:\n");
     while(atual != NULL){
-        printf(" stream: %s,  inicio: %s termino: %s\n",
+        printf("    - Stream: %s, Inicio: %s, Termino: %s\n",
                atual->nomeStream, atual->data_inicio, atual->data_termino);
         atual = atual->prox;
     }
 }
 
-// mediçao do tempo de inserção de N programas em uma categoria
-void medirTempoInsercao(ListaCat *cat, int qtd) {
-    clock_t inicio, fim;
-    double tempo_gasto;
-
-    inicio = clock();
-    for (int i = 0; i < qtd; i++) {
-        char nomeProg[100], hora[100], apresent[100];
-
-        // aqui você coleta os dados do programa
-        printf("Nome do programa %d: ", i + 1);
-        fgets(nomeProg, sizeof(nomeProg), stdin);
-        nomeProg[strcspn(nomeProg, "\n")] = 0;
-
-        printf("Hora de inicio: ");
-        fgets(hora, sizeof(hora), stdin);
-        hora[strcspn(hora, "\n")] = 0;
-
-        printf("Nome do apresentador: ");
-        fgets(apresent, sizeof(apresent), stdin);
-        apresent[strcspn(apresent, "\n")] = 0;
-
-        // insere na árvore AVL de programas da categoria
-        cat->prog = inserirPrograma(cat->prog, nomeProg, hora, apresent, true);
-    }
-    fim = clock();
-
-    tempo_gasto = ((double)(fim - inicio)) / CLOCKS_PER_SEC;
-    printf("\nTempo de insercao de %d programas: %f segundos\n", qtd, tempo_gasto);
-}
-
-//Medição do tempo de busca de programas em uma categoria (30 repetições)
-void medirTempoBusca(ListaCat *cat) {
-    clock_t inicio, fim;
-    double soma = 0.0;
-
-    for (int i = 0; i < 30; i++) {
-        inicio = clock();
-
-        // percorre a arvore de programas (sem prints para não atrapalhar a medição)
-        percorrerProgramas(cat->prog);
-
-        fim = clock();
-        soma += ((double)(fim - inicio)) / CLOCKS_PER_SEC;
+void removerApresentadorDePrograma(ArvProg* raiz, const char* nomeApresentador) {
+    if (raiz == NULL) {
+        return;
     }
 
-    printf("\nTempo medio de busca em categoria (30 execucoes): %f segundos\n", soma / 30.0);
+    // percorre a arvore de programas
+    removerApresentadorDePrograma(raiz->esq, nomeApresentador);
+
+    if (strcmp(raiz->nome_apresent, nomeApresentador) == 0) {
+        strcpy(raiz->nome_apresent, "sem apresentador"); 
+    }
+
+    removerApresentadorDePrograma(raiz->dir, nomeApresentador);
 }
 
-void percorrerProgramas(ArvProg *raiz) {
-    if (raiz == NULL) return;
-    percorrerProgramas(raiz->esq);
-    // nada de printf aqui
-    percorrerProgramas(raiz->dir);
+//  desvincula o apresentador de todos os programas em todas as streams
+
+void desvincularApresentador(nostream* raizdastream, const char* nomeApresentador) {
+    if (raizdastream == NULL) {
+        return;
+    }
+
+    //prcorre arvore de streams
+    desvincularApresentador(raizdastream->esq, nomeApresentador);
+
+    //percorre as categorias da stream atual
+    ListaCat* currentCat = raizdastream->cat;
+    if (currentCat != NULL) {
+        do {
+            removerApresentadorDePrograma(currentCat->prog, nomeApresentador);
+            currentCat = currentCat->prox;
+        } while (currentCat != raizdastream->cat);
+    }
+
+    desvincularApresentador(raizdastream->direita, nomeApresentador);
 }
-
-
-
 
 
 int main(){
@@ -1141,7 +1123,7 @@ int main(){
             st->cat = removercategoria(st->cat, nc);
             break;
         }
-        case 16:{
+            case 16:{
             printf("Digite o nome do apresentador: ");
             char nome_ap[100], nova_stream[100], data_inicio[100], data_fim[100];
             fgets(nome_ap, sizeof(nome_ap), stdin);
@@ -1180,6 +1162,9 @@ int main(){
             fgets(data_fim, sizeof(data_fim), stdin);
             data_fim[strcspn(data_fim, "\n")] = 0;
 
+            // desvincular o apresentador de todos os programas anteriores
+            desvincularApresentador(raizdastream, encontrado->nomeapresent);
+
             // adiciona historico com a stream antiga
             encontrado->streamhist = adicionarHistorico(encontrado->streamhist, encontrado->streamtrabalha, data_inicio, data_fim);
             // altera a stream atual
@@ -1187,6 +1172,7 @@ int main(){
             printf("alteracao realizada: %s agora trabalha em %s\n", encontrado->nomeapresent, encontrado->streamtrabalha);
             break;
         }
+
         case 17:{
             printf("Digite o nome do apresentador: ");
             char nome_a[100];
@@ -1212,43 +1198,6 @@ int main(){
             }
             break;
         }
-
-        case 18: {
-        char nomeCat[100];
-        printf("Digite o nome da categoria: ");
-        scanf(" %[^\n]", nomeCat);
-
-        ListaCat *cat = buscarCat(ListaCat, nomeCat);
-        if (cat == NULL) {
-            printf("Categoria nao encontrada!\n");
-        } else {
-            int qtd;
-            printf("Quantos programas deseja inserir? ");
-            scanf("%d", &qtd);
-            getchar(); // limpar enter
-            medirTempoInsercao(cat, qtd);
-        }
-        break;
-    }
-
-     case 19: {
-        char nomeCat[100];
-        printf("Digite o nome da categoria: ");
-        scanf(" %[^\n]", nomeCat);
-
-        ListaCat *cat = buscarCat(ListaCat, nomeCat);
-        if (cat == NULL) {
-            printf("Categoria nao encontrada!\n");
-        } else {
-            medirTempoBusca(cat);
-        }
-        break;
-    }
-
-    default:
-        printf("Opcao invalida!\n");
-}
-
         case 0:{
             printf("Saindo...\n");
             break;
